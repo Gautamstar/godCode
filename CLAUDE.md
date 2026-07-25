@@ -1,0 +1,102 @@
+# godCode - LeetCode Mastery Workspace
+
+## What this project is
+Gautam is learning data structures and algorithms in Python from the ground up, following
+the **NeetCode roadmap** ordering.
+
+**Goal: solve most LeetCode EASY problems in Python confidently**, and learn the Python each
+algorithm needs along the way.
+
+He is a CS grad, strong in Python fundamentals but has **no prior LeetCode experience**.
+Teach the pattern, not memorized solutions.
+
+## How to coach in this repo
+- **Teach one concept, then drill it.** Lesson first, then he writes code from memory.
+- **Give hints, not solutions.** Only hand over a full line if he asks for it directly.
+- **Run his code and report PASS/FAIL** with the exact diff. Every problem file self-tests.
+- **One problem at a time.** Wait for his attempt, give tight feedback, then move on.
+- Plain language, **no em dashes ever**.
+- When he gets something wrong, name the concept behind the mistake, not just the fix.
+- **Do not restructure existing folders.** Add new modules; leave finished work alone.
+
+## Layout
+```
+godCode/
+  NN_topic/
+    LESSON.md            teaching for that topic (read first)
+    problems/*.py        stubs he fills in - each file self-tests
+    solutions/*.py       reference answers (verified passing)
+```
+
+## How problems work
+Each file in `problems/` has the statement, examples, a hint, a function stub, and a `TESTS`
+list with a runner at the bottom. He writes the body, then:
+
+```bash
+python 03_two_pointers/problems/01_two_sum_sorted.py
+```
+
+It prints PASS/FAIL per case and a tally. **Never edit the TESTS block.**
+
+## The NeetCode roadmap (dependency graph)
+
+```
+                        Arrays & Hashing
+                        /              \
+                Two Pointers            Stack
+               /     |      \
+      Binary Search  |   Linked List
+        Sliding Window  \      |
+               \         \     |
+                +--------> Trees <------+
+                          /  |  \
+                     Tries   |   Backtracking
+                             |      /      \
+              Heap / Priority Queue    Graphs   1-D DP
+               /     |      \            |  \    /   \
+        Intervals Greedy  Advanced Graphs |   2-D DP  Bit Manipulation
+                                          |      \      /
+                                          +---> Math & Geometry
+```
+
+## Module status
+
+| Folder | NeetCode node | Easy-rich? | Status |
+|---|---|---|---|
+| `00_python_for_dsa` | (prerequisite, not a node) | - | built, 12 drills |
+| `01_arrays_strings` | **Arrays & Hashing** (part 1) | yes | built, 8 problems |
+| `02_hashmaps_sets` | **Arrays & Hashing** (part 2) | yes | built, 8 problems |
+| `03_two_pointers` | **Two Pointers** | yes | built, 6 problems |
+| `04_stack` | **Stack** | yes | built, 6 problems |
+| `05_sliding_window` | **Sliding Window** | mixed | built, 5 problems |
+| `06_binary_search` | **Binary Search** | yes | built, 6 problems |
+| `07_linked_list` | **Linked List** | yes | TO BUILD (next) |
+| `08_trees` | **Trees** | yes | TO BUILD |
+| `09_tries` | **Tries** | no (Medium) | later |
+| `10_heap` | **Heap / Priority Queue** | mixed | later |
+| `11_backtracking` | **Backtracking** | no (Medium) | later |
+| `12_graphs` | **Graphs** | no (Medium) | later |
+| `13_1d_dp` | **1-D DP** | mixed | later |
+| `14_2d_dp` | **2-D DP** | no | later |
+| `15_greedy` | **Greedy** | mixed | later |
+| `16_intervals` | **Intervals** | mixed | later |
+| `17_advanced_graphs` | **Advanced Graphs** | no | later |
+| `18_bit_manipulation` | **Bit Manipulation** | yes | later |
+| `19_math_geometry` | **Math & Geometry** | yes | later |
+
+Note: `01` and `02` together are NeetCode's single "Arrays & Hashing" root node. They were
+built before adopting the roadmap and are deliberately left split.
+
+## Priority for his stated goal (most Easy problems)
+Finish **07 Linked List** and **08 Trees**, then jump to **18 Bit Manipulation** and
+**19 Math & Geometry**, which are Easy-rich despite sitting late in the graph. Backtracking,
+Graphs, and DP are mostly Medium and Hard, so they come after the Easy goal is met.
+
+**Build the next module only when he finishes the previous one**, so the workspace stays
+digestible instead of dumping 150 unused files.
+
+## Progress log
+- 2026-07-23: workspace created. Modules 00, 01, 02 built.
+- 2026-07-23: adopted the NeetCode roadmap ordering. Added 03 Two Pointers, 04 Stack,
+  05 Sliding Window, 06 Binary Search. All 39 reference solutions verified passing.
+  Nothing attempted by him yet.
