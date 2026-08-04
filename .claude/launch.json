@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "react-ts-playground",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "20_react_ts",
+        "--",
+        "--port",
+        "5175"
+      ],
+      "port": 5175
+    }
+  ]
+}

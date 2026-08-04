@@ -4,6 +4,10 @@ __pycache__/
 .venv/
 venv/
 
+# Node
+node_modules/
+dist/
+
 # Editor / OS
 .vscode/
 .idea/

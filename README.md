@@ -59,8 +59,12 @@ You get PASS/FAIL per test case and a tally. Fix until it is all green.
 | 04 | Stack | 6 |
 | 05 | Sliding Window | 5 |
 | 06 | Binary Search | 6 |
+| 20 | React & TypeScript | 12 |
 
-**41 exercises.** Next up: Linked List, then Trees.
+**53 exercises.** Next up: Linked List, then Trees.
+
+Module 20 is off the DSA roadmap. It is React and TypeScript interview prep and it runs on
+npm and vitest rather than Python. See [20_react_ts/README.md](20_react_ts/README.md).
 
 ## Suggested order
 `00` (syntax reps) → `01` → `02` → `03` → `04` → `05` → `06`

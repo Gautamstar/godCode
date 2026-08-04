@@ -83,6 +83,7 @@ It prints PASS/FAIL per case and a tally. **Never edit the TESTS block.**
 | `17_advanced_graphs` | **Advanced Graphs** | no | later |
 | `18_bit_manipulation` | **Bit Manipulation** | yes | later |
 | `19_math_geometry` | **Math & Geometry** | yes | later |
+| `20_react_ts` | (off-roadmap, interview prep) | - | built, 12 exercises |
 
 Note: `01` and `02` together are NeetCode's single "Arrays & Hashing" root node. They were
 built before adopting the roadmap and are deliberately left split.
@@ -95,8 +96,30 @@ Graphs, and DP are mostly Medium and Hard, so they come after the Easy goal is m
 **Build the next module only when he finishes the previous one**, so the workspace stays
 digestible instead of dumping 150 unused files.
 
+## The one module that breaks the layout
+`20_react_ts` is React and TypeScript, not DSA, and it is not a NeetCode node. It was added
+for a technical assessment that has React (Basic) and TypeScript (Basic) sections. Because
+JavaScript cannot self-test the way the Python files do, it is an npm package graded by
+vitest instead of a `TESTS` block:
+
+```
+20_react_ts/
+  LESSON_TYPESCRIPT.md, LESSON_REACT.md
+  problems/ts/*.ts       + matching *.test.ts     (the graders)
+  problems/react/*.tsx   + matching *.test.tsx
+  solutions/             verified passing
+  src/                   playground for npm run dev
+```
+
+Same coaching rules apply: hints not solutions, he writes it, run it and report PASS/FAIL.
+Never edit a `.test.ts` or `.test.tsx` file, those are the grader.
+
 ## Progress log
 - 2026-07-23: workspace created. Modules 00, 01, 02 built.
 - 2026-07-23: adopted the NeetCode roadmap ordering. Added 03 Two Pointers, 04 Stack,
   05 Sliding Window, 06 Binary Search. All 39 reference solutions verified passing.
   Nothing attempted by him yet.
+- 2026-08-04: added `20_react_ts` for the OverClocked Services technical assessment
+  (75 min, 4 sections: Machine Learning, React Basic, TypeScript Basic, Problem Solving,
+  strict linear progression with no going back). 5 TypeScript exercises, 7 React exercises,
+  60 grader assertions, all reference solutions verified passing.
