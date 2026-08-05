@@ -108,15 +108,22 @@ describe("part 3: conditionals", () => {
     expect(textOf(render(<MaybeError hasError={true} />).container)).toBe(
       "Error!"
     );
-    expect(textOf(render(<MaybeError hasError={false} />).container)).toBe("");
+    const off = render(<MaybeError hasError={false} />).container;
+    expect(textOf(off)).toBe("");
+    expect(
+      off.querySelector("p"),
+      "render nothing at all, not an empty <p>. use {hasError && <p>...</p>}"
+    ).toBeNull();
   });
 
   it("13. ItemsBadge does not leak a 0 onto the page", () => {
     expect(textOf(render(<ItemsBadge count={2} />).container)).toBe("Has items");
+    const zero = render(<ItemsBadge count={0} />).container;
+    expect(textOf(zero), "compare count > 0, or React prints the 0").toBe("");
     expect(
-      textOf(render(<ItemsBadge count={0} />).container),
-      "compare count > 0, or React prints the 0"
-    ).toBe("");
+      zero.querySelector("p"),
+      "render nothing at all, not an empty <p>"
+    ).toBeNull();
   });
 });
 
