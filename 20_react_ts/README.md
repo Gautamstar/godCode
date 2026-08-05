@@ -43,16 +43,30 @@ browser shows you what you actually built. Use both.
 20_react_ts/
   LESSON_TYPESCRIPT.md      read first for the ts/ problems
   LESSON_REACT.md           read first for the react/ problems
+  problems/react/00_drills.tsx   23 micro-exercises, start here
   problems/ts/*.ts          5 stubs you fill in  (+ .test.ts graders)
   problems/react/*.tsx      7 stubs you fill in  (+ .test.tsx graders)
   solutions/                reference answers, all verified passing
   src/                      playground app for npm run dev
 ```
 
+## Start here if React is new
+
+`problems/react/00_drills.tsx`. 23 micro-exercises, one idea each, most a single line, with
+the explanation directly above each blank. Roughly an hour. Everything else in the React
+half assumes these.
+
+```bash
+npx vitest problems/react/00_drills
+```
+
+Read `LESSON_REACT.md` **after** the drills are green, not before. It lands as review then
+instead of as a wall of new terms.
+
 ## Suggested order
 
-`ts/01` → `ts/02` → `ts/03` → `react/01` → `react/02` → `react/03` → `react/05`
-→ `react/04` → `ts/04` → `ts/05` → `react/06` → `react/07`
+`react/00_drills` → `ts/01` → `ts/02` → `ts/03` → `react/01` → `react/02` → `react/03`
+→ `react/05` → `react/04` → `ts/04` → `ts/05` → `react/06` → `react/07`
 
 TypeScript 01 to 03 first because React problems are written in TypeScript and you will
 fight the types otherwise. Then React 05 (searchable list) before 04 (to-do) because 05

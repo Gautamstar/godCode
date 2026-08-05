@@ -1,5 +1,15 @@
 # Module 20b: React Basics
 
+> **Do the drills first.** If this lesson reads as a wall, that is expected. Open
+> `problems/react/00_drills.tsx` instead and work down it. 23 tiny exercises, one idea each,
+> most of them a single line, with the explanation sitting directly above the blank. Come
+> back and read this once they are green and it will read as review rather than as new
+> material.
+>
+> ```bash
+> npx vitest problems/react/00_drills
+> ```
+
 This covers the HackerRank **React (Basic)** competency list: rendering elements, internal
 state management, handling events, form validation, ES6 and JavaScript, and basic routing.
 
@@ -335,6 +345,7 @@ npm run dev
 
 | File | Covers | Time |
 |---|---|---|
+| `00_drills.tsx` | **start here.** JSX, props, conditionals, lists, events, state, one idea per drill | 60 min |
 | `01_counter.tsx` | useState, props, event handlers | 15 min |
 | `02_list.tsx` | .map(), key, conditional rendering | 20 min |
 | `03_form.tsx` | controlled inputs, validation, preventDefault | 40 min |
