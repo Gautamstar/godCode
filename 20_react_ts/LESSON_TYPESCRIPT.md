@@ -1,5 +1,17 @@
 # Module 20a: TypeScript Basics
 
+> **Do the drills first.** `problems/ts/00_drills.ts`, 27 micro-exercises, one idea each.
+> Come back and read this once they are green.
+>
+> ```bash
+> npx vitest problems/ts/00_drills   # behaviour
+> npm run typecheck                  # types
+> ```
+>
+> Both graders matter. Types are erased before the code runs, so vitest will pass a
+> function with no annotations at all. `npm run typecheck` is the only thing that grades
+> the actual TypeScript.
+
 Everything here maps to the HackerRank **TypeScript (Basic)** competency list: data types,
 variable declaration and scoping, destructuring, arrays and tuples, type annotations,
 interfaces and assertions, functions, classes, and inheritance.
@@ -278,6 +290,7 @@ npx vitest run problems/ts/01_annotations
 
 | File | Covers |
 |---|---|
+| `00_drills.ts` | **start here.** 27 micro-exercises across all of the below |
 | `01_annotations.ts` | annotations, optional and default params, unions, rest params |
 | `02_interfaces.ts` | interfaces, optional properties, index signatures, assertions |
 | `03_arrays_tuples.ts` | arrays, tuples, destructuring, the sort trap |

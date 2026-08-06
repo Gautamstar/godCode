@@ -8,7 +8,8 @@
     "test": "vitest run",
     "watch": "vitest",
     "ts": "vitest run problems/ts",
-    "react": "vitest run problems/react"
+    "react": "vitest run problems/react",
+    "typecheck": "tsc --noEmit -p tsconfig.drills.json"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -59,8 +59,7 @@ export function Total() {
 //    In JSX the attribute is `className`, not `class`. `class` is a reserved
 //    word in JavaScript, so React had to pick a different name.
 export function Loud() {
-  // YOUR CODE HERE
-  return null;
+  return <p className = "big">Loud</p>;
 }
 
 // 5. Return a <p> whose className comes from the `cls` variable.
@@ -71,7 +70,7 @@ export function Loud() {
 export function Styled() {
   const cls = "warning";
   // YOUR CODE HERE
-  return null;
+  return <p className = {cls}></p>;
 }
 
 // 6. Return TWO paragraphs, "one" and "two", with no extra <div> around them.
@@ -80,8 +79,10 @@ export function Styled() {
 //    <>...</> is a fragment: a wrapper that groups them without adding a real
 //    element to the page.
 export function Pair() {
-  // YOUR CODE HERE
-  return null;
+  return <>
+    <p>one</p>
+    <p>two</p>
+  </>;
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +96,7 @@ export function Pair() {
 //    destructuring, exactly like in TypeScript: pull `text` out of the object.
 export function Echo({ text }: { text: string }) {
   // YOUR CODE HERE
-  return null;
+  return <p>{text}</p>;
 }
 
 // 8. Return a <p> containing the `count` prop.
@@ -104,7 +105,7 @@ export function Echo({ text }: { text: string }) {
 //    React prints numbers fine, so no conversion is needed.
 export function Score({ count }: { count: number }) {
   // YOUR CODE HERE
-  return null;
+  return <p>{count}</p>;
 }
 
 // 9. Return a <p> containing "Hi, <name>!" using the `name` prop.
@@ -115,7 +116,7 @@ export function Score({ count }: { count: number }) {
 //      <p>{`Hi, ${name}!`}</p>
 export function Welcome({ name }: { name: string }) {
   // YOUR CODE HERE
-  return null;
+  return <p>Hi, {name}!</p>;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,8 +128,8 @@ export function Welcome({ name }: { name: string }) {
 //     A plain if/else with two returns is completely fine here and is often
 //     the clearest thing to write. Do it that way first.
 export function Switch({ isOn }: { isOn: boolean }) {
-  // YOUR CODE HERE
-  return null;
+  if (isOn) { return <p>ON</p> }
+  return <p>OFF</p>;
 }
 
 // 11. Same as drill 10, but do it INSIDE one <p> using a ternary.
@@ -139,7 +140,12 @@ export function Switch({ isOn }: { isOn: boolean }) {
 //     This is the standard way to choose between two things in JSX.
 export function SwitchTernary({ isOn }: { isOn: boolean }) {
   // YOUR CODE HERE
-  return null;
+  return <>
+    {isOn ?
+      <p>ON </p> :
+      <p>OFF</p>
+    }
+  </>;
 }
 
 // 12. Return a <p> with the text "Error!" ONLY when `hasError` is true.
@@ -150,8 +156,9 @@ export function SwitchTernary({ isOn }: { isOn: boolean }) {
 //     element only when the condition holds:
 //       {hasError && <p>Error!</p>}
 export function MaybeError({ hasError }: { hasError: boolean }) {
-  // YOUR CODE HERE
-  return null;
+  return <>
+    {hasError && <p>Error!</p>}
+  </>;
 }
 
 // 13. Render <p>Has items</p> only when `count` is greater than 0.
@@ -162,7 +169,9 @@ export function MaybeError({ hasError }: { hasError: boolean }) {
 //     explicitly instead: count > 0.
 export function ItemsBadge({ count }: { count: number }) {
   // YOUR CODE HERE
-  return null;
+  return <>
+    {count > 0 && <p>Has items</p>}
+  </>;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,7 +189,11 @@ export function ItemsBadge({ count }: { count: number }) {
 //     get a console warning and, later, real bugs.
 export function WordList({ words }: { words: string[] }) {
   // YOUR CODE HERE
-  return null;
+  return <ul>
+    {words.map((w) => <li key = {w}>
+      {w}
+    </li>)}
+  </ul>;
 }
 
 // 15. Return a <ul> of <li>, one per user, showing each user's name.
@@ -189,8 +202,13 @@ export function WordList({ words }: { words: string[] }) {
 //     With objects, the key should be a stable unique id, not the name and
 //     not the array position.
 export function UserList({ users }: { users: { id: number; name: string }[] }) {
-  // YOUR CODE HERE
-  return null;
+  return <ul>
+    {
+      users.map((u) => <li key={u.id}>
+        {u.name}
+      </li>)
+    }
+  </ul>;
 }
 
 // 16. Return a <ul> containing only the words LONGER than 3 characters.
@@ -199,8 +217,12 @@ export function UserList({ users }: { users: { id: number; name: string }[] }) {
 //       words.filter(...).map(...)
 //     This is the whole idea behind the searchable-list problem later.
 export function LongWords({ words }: { words: string[] }) {
-  // YOUR CODE HERE
-  return null;
+  return <ul>
+    {words.filter((wo) => wo.length > 3)
+      .map((w) => <li key={w}>
+        {w}
+      </li>)}
+  </ul>;
 }
 
 // ---------------------------------------------------------------------------
@@ -215,7 +237,7 @@ export function LongWords({ words }: { words: string[] }) {
 //     Writing onClick={onGo()} calls it immediately during render instead.
 export function GoButton({ onGo }: { onGo: () => void }) {
   // YOUR CODE HERE
-  return null;
+  return <button onClick = {onGo}>GO</button>;
 }
 
 // 18. Return a <button> "Delete" that calls onDelete(id) when clicked.
@@ -231,8 +253,7 @@ export function DeleteButton({
   id: number;
   onDelete: (id: number) => void;
 }) {
-  // YOUR CODE HERE
-  return null;
+  return <button onClick ={()=> onDelete(id)}>Delete</button>;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,8 +268,8 @@ export function DeleteButton({
 //       const [value, setValue] = useState(7);
 //     Nothing is clickable yet. Just display it.
 export function ShowState() {
-  // YOUR CODE HERE
-  return null;
+  const [value, setValue] = useState(7)
+  return <ul>{value}</ul>;
 }
 
 // 20. A <p> showing a count that starts at 0, and a <button> "add" that
@@ -259,8 +280,11 @@ export function ShowState() {
 //     Only the setter tells React to re-run your function:
 //       onClick={() => setCount(count + 1)}
 export function Clicker() {
-  // YOUR CODE HERE
-  return null;
+  const [count, setCount] = useState(0)
+  return <>
+    <p>{count}</p>
+    <button onClick={()=> setCount((x)=> x + 1)}>add</button>
+  </>;
 }
 
 // 21. Same as drill 20, but the button must add 2 by calling the setter

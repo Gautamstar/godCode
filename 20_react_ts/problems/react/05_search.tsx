@@ -31,6 +31,16 @@ interface SearchableListProps {
 }
 
 export default function SearchableList({ items }: SearchableListProps) {
-  // YOUR CODE HERE
-  return <div>replace me</div>;
+  const [query, setQuery] = useState("")
+  const visible = items.filter((i) => i.toLowerCase().includes(query.toLowerCase()));
+  const count = visible.length
+  const noResults = visible.length === 0
+  return <div>
+    <input data-testid="search" value={query} onChange={(e) => setQuery(e.target.value)} />
+    <ul>
+      {visible.map((v) => <li data-testid="item" key={v}>{v}</li>)}
+    </ul>
+    <p data-testid="count">{count}</p>
+    {noResults && <p data-testid="noresults">No matches</p>}
+  </div>;
 }

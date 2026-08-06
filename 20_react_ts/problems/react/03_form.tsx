@@ -27,6 +27,26 @@
 import { useState } from "react";
 
 export default function SignupForm() {
-  // YOUR CODE HERE
-  return <div>replace me</div>;
+  // data-testid = ""
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const emailValid = email.includes("@")
+  const formValid = password.length >= 6 && emailValid
+  const showError = email.length > 0 && !emailValid
+  const [submitted, setSubmitted] = useState("")
+  return <div>
+    <form onSubmit={(e) =>
+      {
+        e.preventDefault();
+        setSubmitted(email)
+      }
+    }>
+    <input data-testid="email" value={email} onChange={(e)=> setEmail(e.target.value)}/>
+      <input type="password" data-testid="password" value={password} onChange={(p) => setPassword(p.target.value)} />
+      <button type="submit" data-testid="submit" disabled={!formValid}>
+      </button>
+      {submitted && <p data-testid="success">Welcome {submitted}</p>}
+      {showError && <p data-testid="error">Invalid email</p>}
+    </form>
+  </div>;
 }
