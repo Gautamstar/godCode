@@ -13,3 +13,6 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# C++
+30_cpp/build/
