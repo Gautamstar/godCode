@@ -22,11 +22,24 @@ Teach the pattern, not memorized solutions.
 ## Layout
 ```
 godCode/
+  drill_harness.py       shared runner for every drills.py
   NN_topic/
     LESSON.md            teaching for that topic (read first)
+    drills.py            many small reps, ramped - do these BEFORE problems
     problems/*.py        stubs he fills in - each file self-tests
     solutions/*.py       reference answers (verified passing)
+    solutions/drills.py  reference answers for the drills
 ```
+
+## Two tracks
+**Drills** are volume: 240 small exercises across modules 00-06, most a few lines, one idea
+each, difficulty climbing inside every module. **Problems** are application. He does drills
+first; the problems assume those moves are automatic.
+
+Drill stubs `raise NotImplementedError` so the runner can separate "not started" from
+"wrong". The runner counts finished drills rather than printing them, names the next
+unsolved one, and takes a filter argument (`9`, `20-30`, or a name substring). Never edit
+the DRILLS block at the bottom of a drills file.
 
 ## How problems work
 Each file in `problems/` has the statement, examples, a hint, a function stub, and a `TESTS`
@@ -63,7 +76,7 @@ It prints PASS/FAIL per case and a tally. **Never edit the TESTS block.**
 
 | Folder | NeetCode node | Easy-rich? | Status |
 |---|---|---|---|
-| `00_python_for_dsa` | (prerequisite, not a node) | - | built, 12 drills |
+| `00_python_for_dsa` | (prerequisite, not a node) | - | built, 80 drills |
 | `01_arrays_strings` | **Arrays & Hashing** (part 1) | yes | built, 8 problems |
 | `02_hashmaps_sets` | **Arrays & Hashing** (part 2) | yes | built, 8 problems |
 | `03_two_pointers` | **Two Pointers** | yes | built, 6 problems |
@@ -123,3 +136,8 @@ Never edit a `.test.ts` or `.test.tsx` file, those are the grader.
   (75 min, 4 sections: Machine Learning, React Basic, TypeScript Basic, Problem Solving,
   strict linear progression with no going back). 5 TypeScript exercises, 7 React exercises,
   60 grader assertions, all reference solutions verified passing.
+- 2026-08-08: sat the OverClocked assessment, went well.
+- 2026-08-08: drills track added across modules 00-06. 00 expanded from 12 to 80 (his
+  original twelve preserved with his own solutions), and 01-06 each gained 24-30. 240
+  drills total, all reference solutions verified passing. Shared `drill_harness.py`
+  replaces the runner that used to be inlined at the bottom of each file.

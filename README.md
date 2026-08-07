@@ -26,20 +26,46 @@ following the **NeetCode roadmap** ordering.
 
 Follow the arrows. Each topic assumes the ones pointing into it.
 
+## Two tracks
+
+**Drills** are the volume track: 240 small exercises, most of them a few lines, difficulty
+climbing slowly inside each module. Do these first. They build the reflexes.
+
+**Problems** are the application track: full LeetCode-style questions that assume the
+drills are automatic.
+
 ## How to use this
 
 1. **Read the lesson**: `NN_topic/LESSON.md`
-2. **Open a problem** in `NN_topic/problems/` and write the function body.
-3. **Run it** to grade yourself instantly:
+2. **Grind the drills**: `NN_topic/drills.py`
+
+```bash
+python 02_hashmaps_sets/drills.py
+```
+
+Finished drills are counted, not printed, so what you are working on stays visible. The
+footer names the next unsolved one. You can also target a single drill, a range, or a name:
+
+```bash
+python 02_hashmaps_sets/drills.py 9
+```
+
+```bash
+python 02_hashmaps_sets/drills.py 20-30
+```
+
+```bash
+python 02_hashmaps_sets/drills.py group
+```
+
+3. **Then the problems** in `NN_topic/problems/`. Write the body and run the file:
 
 ```bash
 python 03_two_pointers/problems/01_two_sum_sorted.py
 ```
 
-You get PASS/FAIL per test case and a tally. Fix until it is all green.
-
 4. Only after a real attempt, compare with `NN_topic/solutions/` for the clean version and
-   an explanation of *why* it works.
+   an explanation of *why* it works. Drill answers live in `NN_topic/solutions/drills.py`.
 
 ## Rules that make this work
 - **Write from memory.** Do not copy a solution and move on. The struggle is the learning.
@@ -50,24 +76,27 @@ You get PASS/FAIL per test case and a tally. Fix until it is all green.
 
 ## What is built
 
-| # | Module | Problems |
-|---|--------|---------|
-| 00 | Python for DSA | 12 drills |
-| 01 | Arrays & Strings | 8 |
-| 02 | Hash Maps & Sets | 8 |
-| 03 | Two Pointers | 6 |
-| 04 | Stack | 6 |
-| 05 | Sliding Window | 5 |
-| 06 | Binary Search | 6 |
-| 20 | React & TypeScript | 12 |
+| # | Module | Drills | Problems |
+|---|--------|-------:|---------:|
+| 00 | Python for DSA | 80 | - |
+| 01 | Arrays & Strings | 30 | 8 |
+| 02 | Hash Maps & Sets | 30 | 8 |
+| 03 | Two Pointers | 26 | 6 |
+| 04 | Stack | 26 | 6 |
+| 05 | Sliding Window | 24 | 5 |
+| 06 | Binary Search | 24 | 6 |
+| 20 | React & TypeScript | 50 | 12 |
 
-**53 exercises.** Next up: Linked List, then Trees.
+**240 Python drills and 39 Python problems.** Next up: Linked List, then Trees.
 
 Module 20 is off the DSA roadmap. It is React and TypeScript interview prep and it runs on
 npm and vitest rather than Python. See [20_react_ts/README.md](20_react_ts/README.md).
 
 ## Suggested order
 `00` (syntax reps) → `01` → `02` → `03` → `04` → `05` → `06`
+
+Within a module: lesson, then drills, then problems. Do not start the problems until the
+drills are green, because the problems assume those moves are automatic.
 
 Module **02 (hash maps)** gives the biggest single jump in problems you can solve.
 Module **03 (two pointers)** is the hinge that unlocks most of the rest of the graph.
