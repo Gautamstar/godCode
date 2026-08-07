@@ -19,7 +19,9 @@ HOW TO RUN:  python 01_arrays_strings\problems\01_running_sum.py
 
 def running_sum(nums):
     # YOUR CODE HERE
-    pass
+    total = []
+    for i in range(nums):
+
 
 
 # --------------------------- tests: do not edit ---------------------------

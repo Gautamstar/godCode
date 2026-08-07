@@ -10,66 +10,73 @@ RUN:  python 00_python_for_dsa/drills.py
 
 # 1. Return the LAST element of the list. (negative indexing)
 def last_element(nums):
-    pass
+    return nums[-1]
 
 
 # 2. Return the first three items of the list. (slicing)
 def first_three(nums):
-    pass
+    return nums[0:3]
 
 
 # 3. Return the list reversed. (slice with a step of -1)
 def reverse_list(items):
-    pass
+    return items[::-1]
 
 
 # 4. Return the INDEX of the largest number. (enumerate)
 def index_of_max(nums):
-    pass
+    max_num = max(enumerate(nums), key =lambda x:x[1])
+    return max_num[0]
 
 
 # 5. Return a dict mapping each item to how many times it appears.
 #    (the freq.get(x, 0) + 1 idiom)
 def count_items(items):
-    pass
-
+    freq = {}
+    for i in items:
+        freq[i] = freq.get(i, 0) +1
+    return freq
 
 # 6. Return a sorted list of the UNIQUE values. (set, then sorted)
 def unique_sorted(items):
-    pass
+    seen = sorted(set(items))
+    return seen
 
 
 # 7. Join the words with a dash between them:  ["a","b"] -> "a-b"
 def join_words(words):
-    pass
-
+    new_woreds = "-".join(words)
+    return new_woreds
 
 # 8. Return a string of only the digit characters from s.
 #    "a1b2" -> "12"        (loop or comprehension + .isdigit())
 def only_digits(s):
-    pass
+    strs = "".join([i for i in s if i.isdigit()])
+    return strs
 
 
 # 9. Return the numbers sorted from largest to smallest.
 def sort_desc(nums):
-    pass
+    return sorted(nums, reverse=True)
 
 
 # 10. Return a list with every EVEN number doubled, odds dropped.
 #     [1,2,3,4] -> [4,8]        (comprehension with a condition)
 def doubled_evens(nums):
-    pass
+    return [i*2 for i in nums if i % 2 == 0]
 
 
 # 11. Return the two values swapped, as a tuple:  (1,2) -> (2,1)
 def swap(a, b):
-    pass
+    swapped = (b,a)
+    return swapped
 
 
 # 12. Return the pairwise sums of two equal-length lists.
 #     [1,2],[10,20] -> [11,22]        (zip)
 def sum_two_lists(a, b):
-    pass
+    sums = [x+y for x,y in zip(a,b)]
+    return sums
 
 
 # --------------------------- tests: do not edit ---------------------------
