@@ -32,15 +32,22 @@ SRC  := $(wildcard drills/*.cpp)
 SETS := $(notdir $(basename $(SRC)))
 BIN  := build
 
-.PHONY: all clean list $(SETS)
+.PHONY: all clean list leaks $(SETS)
 
 all: $(SETS)
 
 # Build and run one drill set. The `-` lets `make all` keep going when one
 # set still has unfinished drills.
+# Leak detection is off for the normal loop, because an unfinished drill throws
+# before it can free what the test handed it, and a wall of leak reports from
+# TODOs is noise. `make leaks SET=02_memory` turns it on deliberately.
 $(SETS): %: $(BIN)/%
 	@echo "=== $* ==="
-	@-./$(BIN)/$* $(ARGS)
+	@-ASAN_OPTIONS=detect_leaks=0 ./$(BIN)/$* $(ARGS)
+
+leaks: $(BIN)/$(SET)
+	@echo "=== $(SET) with leak detection ==="
+	@-ASAN_OPTIONS=detect_leaks=1 ./$(BIN)/$(SET) $(ARGS)
 
 $(BIN)/%: drills/%.cpp harness/drill_harness.hpp | $(BIN)
 	@$(CXX) $(CXXFLAGS) $< -o $@

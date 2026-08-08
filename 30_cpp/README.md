@@ -72,12 +72,25 @@ it, so a fresh file reads `0/28 not started` instead of 28 wrong answers.
 |---|---:|---|
 | `00_basics` | 30 | types, sizes, integer conversions, references vs copies, const correctness, overloads, lambdas |
 | `01_pointers` | 28 | address-of and dereference, array decay, pointer arithmetic, C strings, `const` placement, out-parameters, function pointers |
+| `02_memory` | 28 | `new`/`delete[]`, RAII by hand, destruction order, cleanup on the exception path, `unique_ptr` and ownership transfer, `shared_ptr`, `weak_ptr`, reference cycles, custom deleters |
+
+## Leak detection
+
+Off in the normal loop, because an unfinished drill throws before it can free what the test
+handed it, and a wall of leak reports from TODOs is noise rather than signal. Turn it on
+deliberately once a section is green:
+
+```bash
+make leaks SET=02_memory
+```
+
+That is worth doing every time you finish a section of `02_memory`. The whole module is
+about not leaking, and this is the only thing that actually checks it.
 
 Planned, in order:
 
 | Set | Will cover |
 |---|---|
-| `02_memory` | stack vs heap, `new`/`delete`, RAII, `unique_ptr`, `shared_ptr`, ownership transfer, leaks the sanitiser catches |
 | `03_classes` | constructors, destructors, the rule of three, copy semantics, operator overloading, slicing |
 | `04_move` | rvalue references, `std::move`, move constructors, the rule of five, why `std::vector` growth is cheap |
 | `05_templates` | function and class templates, specialisation, `constexpr`, basic concepts |
