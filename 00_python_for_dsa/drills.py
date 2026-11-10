@@ -30,48 +30,49 @@ from drill_harness import run  # noqa: E402
 
 # 1. Return a + b.
 def add(a, b):
-    raise NotImplementedError
+    return a + b
 
 
 # 2. Return how many whole times b fits into a.  whole_divide(7, 2) -> 3
 #    Use // (floor division). Plain / gives 3.5, a float.
 def whole_divide(a, b):
-    raise NotImplementedError
+    return a // b
 
 
 # 3. Return the remainder of a divided by b.  remainder(7, 2) -> 1
 #    The % operator. This is how you test divisibility and wrap around.
 def remainder(a, b):
-    raise NotImplementedError
+    return a % b
 
 
 # 4. Return a raised to the power b.  power(2, 3) -> 8
 def power(a, b):
-    raise NotImplementedError
+    return a ** b
 
 
 # 5. Return True when n is even.
 #    n % 2 == 0 is already True or False, so no if statement is needed.
 def is_even(n):
-    raise NotImplementedError
-
+    return n % 2 == 0
 
 # 6. Return the distance of n from zero.  distance(-4) -> 4
 def distance(n):
-    raise NotImplementedError
+    return abs(n)
 
 
 # 7. Return n as a whole number, throwing away the decimal part.
 #    to_int(3.9) -> 3      int() truncates toward zero, it does not round.
 def to_int(n):
-    raise NotImplementedError
+    return int(n)
 
 
 # 8. Return the smaller of a and b WITHOUT using min().
 #    An if/else with two returns is the clearest way.
 def smaller(a, b):
-    raise NotImplementedError
-
+    if a > b:
+        return b
+    else:
+        return a
 
 # ===========================================================================
 # B. STRINGS
