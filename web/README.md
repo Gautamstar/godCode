@@ -46,6 +46,7 @@ web/
     pyworker.js      web worker that loads Pyodide
     grader.py        the grader, shared by the browser and build.py
     content.json     generated
+    art/             engravings and icons, with CREDITS.md
 ```
 
 - **Python** runs in the browser through Pyodide, in a web worker. A run that takes longer
@@ -64,3 +65,10 @@ web/
 `web/site` is a plain static folder with no server code. Any static host works (GitHub
 Pages, Netlify, Vercel, Cloudflare Pages): point it at `web/site` as the publish
 directory, with no build command.
+
+## Theme and art
+
+The site is dressed as a fantasy quest log: chapters, ranks, boss fights. The names and
+ranks are original; nothing is taken from a named fantasy franchise. All artwork is
+freely licensed and listed in `web/site/art/CREDITS.md`. The icon set is CC BY 3.0, so
+the credit line at the bottom of the dashboard has to stay.

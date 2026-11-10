@@ -5,6 +5,22 @@
   const XP = { lesson: 5, drill: 10, problem: 30 };
   const XP_PER_LEVEL = 150;
   const KEY = "godcode:v1";
+  // Fantasy dressing. Ranks are indexed by level; realms by module folder.
+  const RANKS = ["Wanderer", "Squire", "Scout", "Ranger", "Knight", "Captain", "Warden", "Sage", "Wizard", "Archmage"];
+  const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"];
+  const REALMS = {
+    "00": ["snake", "The Serpent's Tongue"],
+    "01": ["scroll-unfurled", "Scrolls and Strings"],
+    "02": ["skeleton-key", "The Vault of Keys"],
+    "03": ["crossed-swords", "The Twin Blades"],
+    "04": ["stone-stack", "The Standing Stones"],
+    "05": ["spyglass", "The Watcher's Window"],
+    "06": ["compass", "The Halving Road"],
+  };
+  const realm = (m) => REALMS[m.num] || ["rune-stone", ""];
+  const ico = (name) => '<i class="ico i-' + name + '" aria-hidden="true"></i>';
+  const levelOf = (xp) => Math.floor(xp / 150) + 1;
+  const rankOf = (level) => RANKS[Math.min(level, RANKS.length) - 1];
   const codeKey = (id) => "godcode:code:" + id;
 
   let modules = [];
@@ -63,7 +79,11 @@
     let xp = XP[item.kind];
     if (state.peeked[item.id]) xp = Math.floor(xp / 2);
     state.done[item.id] = { at: Date.now(), xp };
+    const before = levelOf(state.xp);
     state.xp += xp;
+    if (!opts.imported && levelOf(state.xp) > before) {
+      setTimeout(() => toast("Rank up. You are now a " + rankOf(levelOf(state.xp)) + ", level " + levelOf(state.xp)), 1800);
+    }
     if (!opts.imported && !state.days.includes(today())) state.days.push(today());
     save();
     return xp;
@@ -72,6 +92,25 @@
   // ---------------------------------------------------------------- helpers
   const label = (item) => (item.kind === "lesson" ? "Lesson" : item.kind === "drill" ? "Drill " + item.n : "Problem " + item.n);
   const href = (item) => "#/" + item.id;
+  // "A. Converging From Both Ends" -> "Converging from both ends"
+  const sent = (s) => {
+    const t = s.replace(/^[A-Z]\.\s*/, "");
+    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+  };
+  // A module drawn as an array: one cell per item, filled when done, with the
+  // pointer sitting on `current`. A gap separates lesson, drills, and problems.
+  function cells(mod, current, links) {
+    let h = "";
+    let kind = null;
+    mod.items.forEach((i) => {
+      const cls = "c" + (isDone(i.id) ? " d" : "") + (i === current ? " cur" : "") + (kind && i.kind !== kind ? " brk" : "");
+      kind = i.kind;
+      h += links
+        ? '<a class="' + cls + '" href="' + href(i) + '" title="' + esc(label(i) + ": " + i.title) + '"></a>'
+        : '<i class="' + cls + '"></i>';
+    });
+    return h;
+  }
   function nextUndone(list) {
     return list.find((i) => !isDone(i.id));
   }
@@ -137,13 +176,16 @@
 
   // ---------------------------------------------------------------- top bar
   function renderTop(item) {
-    const level = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+    const level = levelOf(state.xp);
     const into = state.xp % XP_PER_LEVEL;
     $("#level").innerHTML =
-      "<span>Level <b>" + level + "</b></span><div class='bar'><i style='width:" + (into / XP_PER_LEVEL) * 100 + "%'></i></div><span>" + state.xp + " XP</span>";
+      '<span class="rank">' + ico("laurel-crown") + "<b>" + rankOf(level) + "</b><em>Lv " + level + "</em></span>" +
+      "<div class='bar' title='" + into + " of " + XP_PER_LEVEL + " XP to the next level'><i style='width:" + (into / XP_PER_LEVEL) * 100 + "%'></i></div>" +
+      "<span class='xp'>" + state.xp + " XP</span>";
     const s = streak();
     const el = $("#streak");
-    el.textContent = s + " day streak";
+    el.innerHTML = ico("campfire") + "<b>" + s + "</b>";
+    el.title = s ? s + " day streak" : "No streak yet. Finish one item today to light the fire.";
     el.classList.toggle("cold", s === 0);
     const crumb = $("#crumb");
     if (!item) {
@@ -153,7 +195,8 @@
     const mod = moduleOf[item.id];
     const idx = mod.items.indexOf(item) + 1;
     crumb.hidden = false;
-    crumb.innerHTML = "<b>" + mod.num + " " + esc(mod.title) + "</b> &nbsp;·&nbsp; " + idx + " of " + mod.items.length + " &nbsp;▾";
+    crumb.innerHTML = ico(realm(mod)[0]) + "<b>" + esc(mod.title) + "</b><span>" + idx + " / " + mod.items.length + "</span>";
+    crumb.title = "Open the module outline";
   }
 
   // ---------------------------------------------------------------- dashboard
@@ -168,46 +211,54 @@
     const cnt = (list) => list.filter((i) => isDone(i.id)).length;
 
     const mods = modules
-      .map((m) => {
+      .map((m, mi) => {
         const d = m.items.filter((i) => i.kind === "drill");
         const p = m.items.filter((i) => i.kind === "problem");
         const dn = cnt(m.items);
         const all = dn === m.items.length;
         const target = nextUndone(m.items) || m.items[0];
+        const [icon, flavor] = realm(m);
+        const pct = Math.round((dn / m.items.length) * 100);
         return (
-          '<a class="mod' + (all ? " done" : "") + '" href="' + href(target) + '">' +
-          '<div class="num">' + (all ? "✓" : m.num) + "</div>" +
-          "<div><h3>" + esc(m.title) + "</h3>" +
-          '<div class="bar green"><i style="width:' + (dn / m.items.length) * 100 + '%"></i></div>' +
-          '<div class="meta"><span>' + cnt(d) + "/" + d.length + " drills</span>" +
-          (p.length ? "<span>" + cnt(p) + "/" + p.length + " problems</span>" : "") + "</div></div>" +
-          '<div class="go">' + (all ? "Review" : dn ? "Continue" : "Start") + " →</div></a>"
+          '<li class="quest' + (all ? " done" : dn ? " active" : "") + '"><a href="' + href(target) + '">' +
+          '<span class="crest">' + ico(icon) + "</span>" +
+          '<span class="body"><span class="chapter">Chapter ' + (ROMAN[mi] || mi + 1) + (flavor ? " · " + flavor : "") + "</span>" +
+          '<span class="name">' + esc(m.title) + "</span>" +
+          '<span class="cells" aria-hidden="true">' + cells(m, all ? null : target, false) + "</span>" +
+          '<span class="counts">' + cnt(d) + " / " + d.length + " drills" +
+          (p.length ? "<span>" + ico("dragon-head") + cnt(p) + " / " + p.length + " bosses</span>" : "") + "</span></span>" +
+          '<span class="go"><b>' + pct + '%</b><span class="btn ' + (all ? "" : "primary") + '">' + (all ? "Replay" : dn ? "Continue" : "Begin") + "</span></span></a></li>"
         );
       })
       .join("");
+    const s = streak();
+    const level = levelOf(state.xp);
+    const chip = (icon, big, small) => '<div class="chip">' + ico(icon) + "<div><b>" + big + "</b><span>" + small + "</span></div></div>";
 
     $("#main").innerHTML =
-      '<div class="dash"><div class="dash-inner">' +
-      '<div class="hero"><div class="next">' +
+      '<div class="dash">' +
+      '<section class="hero"><div class="hero-art"></div><div class="hero-in">' +
       (next
-        ? '<div class="label">Up next</div><h1>' + esc(next.title) + "</h1><p>" +
-          moduleOf[next.id].num + " " + esc(moduleOf[next.id].title) + " · " + label(next) + "</p>"
-        : '<div class="label">Course complete</div><h1>Every item is done</h1><p>Redo drills from a blank editor to keep them sharp.</p>') +
+        ? '<span class="eyebrow">' + (done ? "Your quest continues" : "Your quest begins") + "</span>" +
+          "<h1>" + esc(next.title) + "</h1>" +
+          '<p>Chapter ' + (ROMAN[modules.indexOf(moduleOf[next.id])] || "") + ", " + esc(moduleOf[next.id].title) + " · " + label(next) + "</p>" +
+          '<a class="btn primary big" href="' + href(next) + '">' + (done ? "Continue the quest" : "Set out") + "</a>"
+        : '<span class="eyebrow">The quest is complete</span><h1>Every trial is won</h1><p>Replay drills from a blank editor to keep the blade sharp.</p>') +
+      "</div></section>" +
+      '<div class="dash-inner">' +
+      '<div class="chips">' +
+      chip("laurel-crown", rankOf(level), "Level " + level + " · " + state.xp + " XP") +
+      chip("campfire", s + (s === 1 ? " day" : " days"), s ? "Streak" : "No streak yet") +
+      chip("broadsword", cnt(drills) + " / " + drills.length, "Drills won") +
+      chip("dragon-head", cnt(probs) + " / " + probs.length, "Bosses slain") +
       "</div>" +
-      (next ? '<a class="btn primary" href="' + href(next) + '">' + (done ? "Continue" : "Start learning") + "</a>" : "") +
-      "</div>" +
-      '<div class="tiles">' +
-      "<div class='tile'><small>Completed</small><b>" + done + "</b> <span class='note'>/ " + total + "</span></div>" +
-      "<div class='tile'><small>Drills</small><b>" + cnt(drills) + "</b> <span class='note'>/ " + drills.length + "</span></div>" +
-      "<div class='tile'><small>Problems</small><b>" + cnt(probs) + "</b> <span class='note'>/ " + probs.length + "</span></div>" +
-      "<div class='tile'><small>Streak</small><b>" + streak() + "</b> <span class='note'>days</span></div>" +
-      "</div>" +
-      '<h2 class="sec">Python for DSA, NeetCode order</h2><div class="mods">' + mods + "</div>" +
+      '<h2 class="sec">The road ahead</h2><ol class="quests">' + mods + "</ol>" +
       '<div class="foot"><span>Progress is saved in this browser.</span>' +
-      '<button class="btn ghost" id="export">Export progress</button>' +
+      '<button class="btn ghost" id="export">Export</button>' +
       '<button class="btn ghost" id="import">Import</button>' +
       '<button class="btn ghost" id="reset">Reset</button>' +
       '<input type="file" id="import-file" accept="application/json" hidden></div>' +
+      '<p class="credits">Paintings by Thomas Cole, John Martin, Caspar David Friedrich, and Rembrandt, public domain. Icons from game-icons.net by Lorc and Delapouite, CC BY 3.0.</p>' +
       "</div></div>";
 
     $("#export").onclick = exportProgress;
@@ -252,10 +303,10 @@
     const next = flat[i + 1];
     return (
       '<div class="bottom">' +
-      (prev ? '<a class="btn ghost" href="' + href(prev) + '">← Previous</a>' : "") +
-      '<div class="grow"></div>' + middle +
+      (prev ? '<a class="btn ghost" href="' + href(prev) + '">Previous</a>' : "") +
+      '<nav class="strip" id="strip" aria-label="Position in this module">' + cells(moduleOf[item.id], item, true) + "</nav>" + middle +
       (next
-        ? '<a class="btn ' + (isDone(item.id) ? "good" : "ghost") + '" id="next" href="' + href(next) + '">Next →</a>'
+        ? '<a class="btn ' + (isDone(item.id) ? "good" : "ghost") + '" id="next" href="' + href(next) + '">Next</a>'
         : '<a class="btn ghost" id="next" href="#/">Finish</a>') +
       "</div>"
     );
@@ -266,8 +317,8 @@
     renderTop(item);
     const done = isDone(item.id);
     $("#main").innerHTML =
-      '<div class="reading"><div class="md">' + marked.parse(item.md) + "</div></div>" +
-      bottomBar(item, done ? "" : '<button class="btn primary" id="read">Mark as read  +' + XP.lesson + " XP</button>");
+      '<div class="reading"><div class="lore-art"><span>' + ico("open-book") + "Lore · " + esc(moduleOf[item.id].title) + '</span></div><div class="md">' + marked.parse(item.md) + "</div></div>" +
+      bottomBar(item, done ? "" : '<button class="btn primary" id="read">Mark as read</button>');
     highlight($(".md"));
     const btn = $("#read");
     if (btn)
@@ -287,17 +338,20 @@
 
   function leftPane(item) {
     const done = isDone(item.id);
-    let h = '<div class="kicker">';
+    let h = item.kind === "problem"
+      ? '<div class="scene boss"><span>' + ico("dragon-head") + "Boss fight</span></div>"
+      : '<div class="scene train"><span>' + ico("crossed-swords") + "Training ground</span></div>";
+    h += '<div class="kicker">';
     h += item.kind === "drill"
-      ? '<span class="tag drill">Drill ' + item.n + "</span><span>" + esc(item.section) + "</span>"
-      : '<span class="tag problem">' + esc(item.level) + " problem</span><span>" + esc(item.topic) + "</span>";
-    h += '<span class="tag done" id="done-tag"' + (done ? "" : " hidden") + ">Completed</span></div>";
+      ? '<span class="tag">' + ico("broadsword") + "Drill " + item.n + "</span><span>" + esc(sent(item.section)) + "</span>"
+      : '<span class="tag boss">' + ico("dragon-head") + "Problem " + item.n + "</span><span>" + esc(item.level) + " · " + esc(item.topic) + "</span>";
+    h += '<span class="ok" id="done-tag"' + (done ? "" : " hidden") + ">" + ico("checked-shield") + "Won</span></div>";
     h += '<h1 class="' + (item.kind === "drill" ? "fn" : "") + '">' + esc(item.title) + "</h1>";
     h += '<div class="prompt">' + renderPrompt(item.prompt) + "</div>";
     const examples = item.examples || item.tests.slice(0, 3).map((t) => t.call + "  ->  " + t.expected).join("\n");
     h += "<h4>Examples</h4>" + codeBlock(examples);
-    if (item.hint) h += "<details><summary>Hint (only peek if you are stuck)</summary><div class='prompt'>" + renderPrompt(item.hint) + "</div></details>";
-    h += '<details id="sol"><summary>Reference solution</summary><div id="sol-body"></div></details>';
+    if (item.hint) h += "<details><summary>" + ico("torch") + "Hint</summary><div class='prompt'>" + renderPrompt(item.hint) + "</div></details>";
+    h += '<details id="sol"><summary>' + ico("tied-scroll") + 'Reference solution</summary><div id="sol-body"></div></details>';
     h += '<p class="note" style="margin-top:18px">' + item.tests.length + " test cases. <b>Run</b> tries the first one and shows anything you print. <b>Submit</b> checks them all.</p>";
     return h;
   }
@@ -321,7 +375,7 @@
       '<section class="right">' +
       '<div class="pane-head"><span>solution.py</span><div class="grow"></div><button class="link" id="reset-code">Reset to starter</button></div>' +
       '<div class="editor" id="editor"></div>' +
-      '<div class="pane-head"><span>Results</span></div>' +
+      '<div class="pane-head"><span>results</span></div>' +
       '<div class="console" id="console"><div class="idle">Write your answer above, then Run or Submit.</div></div>' +
       "</section></div>" +
       bottomBar(
@@ -400,8 +454,8 @@
   }
 
   function caseHtml(r) {
-    const mark = { pass: "✓", fail: "✗", error: "✗", todo: "·" }[r.status];
-    let h = '<div class="case ' + r.status + '">' + mark + " " + esc(r.call);
+    const mark = { pass: "PASS", fail: "FAIL", error: "FAIL", todo: "TODO" }[r.status];
+    let h = '<div class="case ' + r.status + '"><span class="tag">' + mark + "</span>" + esc(r.call);
     if (r.status === "fail") h += '<div class="detail"><em>got</em>' + esc(r.got) + "\n<em>expected</em>" + esc(r.expected) + "</div>";
     if (r.status === "error") h += '<div class="detail">' + esc(r.error) + "</div>";
     return h + "</div>";
@@ -426,15 +480,16 @@
       h += '<div class="banner info">Not started yet. Replace the placeholder body with your code.</div>';
     } else if (submit && report.status === "pass") {
       const xp = complete(item);
-      h += '<div class="banner pass">All ' + passed + " tests passed" + (xp ? "  +" + xp + " XP" : "") + "</div>";
+      h += '<div class="banner pass">' + ico("trophy") + "Victory. " + passed + "/" + passed + " passed" + (xp ? "<span>+" + xp + " XP</span>" : "") + "</div>";
       if (xp) toast("+" + xp + " XP");
       $("#done-tag").hidden = false;
       const next = $("#next");
       next.classList.remove("ghost");
       next.classList.add("good");
       renderTop(item);
+      $("#strip").innerHTML = cells(moduleOf[item.id], item, true);
     } else if (submit) {
-      h += '<div class="banner fail">' + passed + " of " + report.results.length + " tests passed</div>";
+      h += '<div class="banner fail">' + passed + "/" + report.results.length + " passed. Regroup and strike again.</div>";
     } else {
       h += '<div class="banner ' + (report.status === "pass" ? "info" : "fail") + '">' +
         (report.status === "pass" ? "First test passes. Submit to check all " + item.tests.length + "." : "First test does not pass yet") + "</div>";
@@ -452,15 +507,15 @@
     let h = "";
     let section = null;
     mod.items.forEach((i) => {
-      const sec = i.kind === "lesson" ? "Start here" : i.kind === "drill" ? i.section : "Problems";
+      const sec = i.kind === "lesson" ? "Read first" : i.kind === "drill" ? sent(i.section) : "Problems";
       if (sec !== section) {
         section = sec;
         h += "<h6>" + esc(sec) + "</h6>";
       }
       h +=
-        '<a class="row' + (isDone(i.id) ? " done" : "") + (i === current ? " on" : "") + '" href="' + href(i) + '">' +
-        '<span class="mark">' + (isDone(i.id) ? "✓" : "○") + '</span><span class="n">' + (i.kind === "lesson" ? "" : i.n) +
-        '</span><span class="t">' + esc(i.title) + "</span></a>";
+        '<a class="row ' + i.kind + (isDone(i.id) ? " done" : "") + (i === current ? " on" : "") + '" href="' + href(i) + '">' +
+        '<span class="n">' + (i.kind === "lesson" ? "" : i.n) + '</span><span class="t">' + esc(i.title) +
+        '</span><span class="mark">' + (isDone(i.id) ? "✓" : "") + "</span></a>";
     });
     $("#drawer-list").innerHTML = h;
     $("#drawer").hidden = false;
