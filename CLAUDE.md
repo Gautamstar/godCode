@@ -127,6 +127,13 @@ vitest instead of a `TESTS` block:
 Same coaching rules apply: hints not solutions, he writes it, run it and report PASS/FAIL.
 Never edit a `.test.ts` or `.test.tsx` file, those are the grader.
 
+## The web app
+`web/` turns modules 00-06 into a boot.dev-style site (lesson left, editor right, Python
+in the browser via Pyodide, XP and streaks in localStorage). See `web/README.md`.
+After changing any lesson, drill, problem, or solution, or adding a module, regenerate the
+content with `python3 web/build.py`. It fails if any reference solution stops passing.
+Preview with the `godcode-web` entry in `.claude/launch.json`.
+
 ## Progress log
 - 2026-07-23: workspace created. Modules 00, 01, 02 built.
 - 2026-07-23: adopted the NeetCode roadmap ordering. Added 03 Two Pointers, 04 Stack,
@@ -141,3 +148,4 @@ Never edit a `.test.ts` or `.test.tsx` file, those are the grader.
   original twelve preserved with his own solutions), and 01-06 each gained 24-30. 240
   drills total, all reference solutions verified passing. Shared `drill_harness.py`
   replaces the runner that used to be inlined at the bottom of each file.
+- 2026-11-10: added `web/`, the browser version of modules 00-06 (286 items).

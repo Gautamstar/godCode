@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>godCode</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#/">god<span>Code</span></a>
+  <button class="crumb" id="crumb" hidden></button>
+  <div class="grow"></div>
+  <div class="py" id="py" title="Python runtime"><i></i><span>Loading Python</span></div>
+  <div class="stat" id="streak" title="Days in a row with at least one completion"></div>
+  <div class="level" id="level"></div>
+</header>
+
+<main id="main"><div class="boot">Loading course…</div></main>
+
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer-panel">
+    <div class="drawer-head">
+      <select id="drawer-module" aria-label="Module"></select>
+      <button class="btn ghost" id="drawer-close" aria-label="Close outline">Close</button>
+    </div>
+    <div class="drawer-list" id="drawer-list"></div>
+  </div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="runner.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
