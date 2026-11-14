@@ -257,8 +257,7 @@
       chip("dragon-head", cnt(probs) + " / " + probs.length, "Bosses slain") +
       "</div>" +
       '<h2 class="sec">The road ahead</h2><ol class="quests">' + mods + "</ol>" +
-      '<div class="syncbox" id="syncbox"></div>' +
-      '<div class="foot">' +
+      '<div class="foot"><span>Progress is saved in this browser. Sign in to keep it on every device.</span>' +
       '<button class="btn ghost" id="export">Export</button>' +
       '<button class="btn ghost" id="import">Import</button>' +
       '<button class="btn ghost" id="reset">Reset</button>' +
@@ -269,7 +268,6 @@
     $("#export").onclick = exportProgress;
     $("#import").onclick = () => $("#import-file").click();
     $("#import-file").onchange = importProgress;
-    renderSyncBox();
     $("#reset").onclick = async () => {
       const everywhere = Sync.info().signedIn;
       if (!confirm("Erase all progress, XP, and saved code " + (everywhere ? "on every synced device" : "in this browser") + "? This cannot be undone.")) return;
@@ -289,28 +287,38 @@
     const m = Math.floor((Date.now() - t) / 60000);
     return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.floor(m / 60) + " h ago" : Math.floor(m / 1440) + " d ago";
   }
-  function renderSyncBox() {
-    const box = $("#syncbox");
-    if (!box) return;
+  // The account control lives in the header: a Sign in button when signed
+  // out, the username with a small menu (status, sync, sign out) when in.
+  function renderAcct() {
+    const box = $("#acct");
     const s = Sync.info();
+    const err = s.status.kind === "error";
     if (!s.signedIn) {
-      box.className = "syncbox" + (s.status.kind === "error" ? " err" : "");
-      box.innerHTML = ico("rune-stone") + "<span>" + esc(s.status.kind === "error" ? s.status.msg : "Progress is saved in this browser only. An account keeps it on every device.") + "</span>" +
-        '<button class="btn ghost" id="sync-open">Sign in</button><button class="btn" id="sync-new">Create account</button>';
-      $("#sync-open").onclick = () => openSync(false);
-      $("#sync-new").onclick = () => openSync(true);
+      box.innerHTML = '<button class="btn primary" id="acct-in"' + (err ? ' title="' + esc(s.status.msg) + '"' : "") + ">Sign in</button>";
+      $("#acct-in").onclick = () => openSync(false);
       return;
     }
-    const line = s.status.kind === "error" ? s.status.msg
+    const open = !!$("#acct-menu") && !$("#acct-menu").hidden;
+    const line = err ? s.status.msg
       : s.status.kind === "syncing" ? "Saving your progress…"
-      : "Signed in as " + s.user + (s.last ? ". Progress saved " + ago(s.last) + "." : ".");
-    box.className = "syncbox on" + (s.status.kind === "error" ? " err" : "");
-    box.innerHTML = ico("rune-stone") + "<span>" + esc(line) + "</span>" +
-      '<button class="btn ghost" id="sync-now">Sync now</button><button class="btn ghost" id="sync-out">Sign out</button>';
+      : s.last ? "Progress saved " + ago(s.last) + "." : "Signed in.";
+    box.innerHTML =
+      '<button class="acct-btn' + (err ? " err" : "") + '" id="acct-btn" aria-haspopup="true" aria-expanded="' + open + '">' +
+      "<i></i><b>" + esc(s.user) + "</b></button>" +
+      '<div class="acct-menu" id="acct-menu"' + (open ? "" : " hidden") + ">" +
+      "<p" + (err ? ' class="err"' : "") + ">" + esc(line) + "</p>" +
+      '<button class="btn" id="sync-now">Sync now</button><button class="btn ghost" id="sync-out">Sign out</button></div>';
+    $("#acct-btn").onclick = (e) => {
+      e.stopPropagation();
+      const m = $("#acct-menu");
+      m.hidden = !m.hidden;
+      if (!m.hidden) renderAcct(); // refresh the "saved N min ago" line
+    };
+    $("#acct-menu").onclick = (e) => e.stopPropagation();
     $("#sync-now").onclick = () => Sync.syncNow();
     $("#sync-out").onclick = async () => {
       await Sync.logout();
-      renderSyncBox();
+      renderAcct();
       toast("Signed out. Progress stays in this browser.");
     };
   }
@@ -355,7 +363,12 @@
       dlg.close();
       toast(creating ? "Account created. Your progress is saved to it." : "Signed in. Your progress is up to date.");
     };
-    Sync.onStatus(renderSyncBox);
+    Sync.onStatus(renderAcct);
+    renderAcct();
+    document.addEventListener("click", () => {
+      const m = $("#acct-menu");
+      if (m) m.hidden = true;
+    });
     // Another device changed something: reload state and refresh what is on
     // screen without throwing away the page the user is on.
     Sync.onApplied(({ replaced, codeChanged }) => {

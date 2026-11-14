@@ -207,15 +207,25 @@ h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .strip a.c:hover { background: var(--gold-hi); height: 14px; }
 
 /* sync: a status row above the footer, and the sign-in dialog */
-.syncbox {
-  margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 16px;
+.acct { position: relative; flex: none; }
+.acct .btn { padding: 8px 14px 7px; }
+.acct-btn {
+  display: flex; align-items: center; gap: 8px; max-width: 11rem; padding: 6px 12px; cursor: pointer;
+  background: var(--panel-2); color: var(--parch); border: 1px solid var(--line-2); border-radius: 6px; font: 15px var(--serif);
 }
-.syncbox > span { flex: 1; min-width: 12rem; }
-.syncbox .ico { color: var(--dim); font-size: 20px; }
-.syncbox.on .ico { color: var(--good); }
-.syncbox.err { border-color: var(--bad); }
-.syncbox.err > span, .syncbox.err .ico { color: var(--bad); }
+.acct-btn:hover { border-color: var(--gold-lo); }
+.acct-btn i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none; }
+.acct-btn.err i { background: var(--bad); }
+.acct-btn b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-btn::after { content: "\25BE"; color: var(--dim); }
+.acct-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: 15rem; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; box-shadow: 0 18px 50px #000;
+}
+.acct-menu[hidden] { display: none; }
+.acct-menu p { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
+.acct-menu p.err { color: var(--bad); }
 .modal {
   width: min(27rem, calc(100vw - 32px)); padding: 0; border: 1px solid var(--gold-lo); border-radius: 10px;
   background: var(--panel); color: var(--parch); box-shadow: 0 30px 90px #000;
@@ -242,7 +252,7 @@ h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .modal .err:empty { display: none; }
 .modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 
-.foot { margin-top: 14px; display: flex; gap: 4px 6px; flex-wrap: wrap; align-items: center; color: var(--dim); font-size: 15px; }
+.foot { margin-top: 36px; display: flex; gap: 4px 6px; flex-wrap: wrap; align-items: center; color: var(--dim); font-size: 15px; }
 .foot span { margin-right: 8px; }
 .credits { margin: 10px 0 0; color: var(--dim); font-size: 14px; font-style: italic; }
 
@@ -423,6 +433,11 @@ details > div { padding: 2px 14px 6px; }
   .top { gap: 10px; padding: 0 12px; }
   .crumb { flex: 0 1 auto; padding: 5px 9px; }
   .crumb span { display: none; }
+  /* inside a chapter the breadcrumb needs the room: the logo drops to its icon */
+  .top:has(#crumb:not([hidden])) .logo { font-size: 0; gap: 0; }
+  .logo, .stat, .level { flex: none; }
+  .acct-btn { max-width: 6.5rem; padding: 5px 9px; }
+  .acct .btn { padding: 8px 10px 7px; }
   .bottom { gap: 6px; padding: 0 10px; position: sticky; bottom: 0; }
   .bottom .btn { padding: 10px 11px 9px; }
   .btn kbd { display: none; }
