@@ -105,6 +105,43 @@ check("a device from before the reset cannot bring data back", not b["doc"]["sta
 s, b, _ = call("/sync", {"doc": doc(done={"c": {"at": 400, "xp": 10}}, epoch=1)}, phone)
 check("after adopting the new epoch, syncing works again", set(b["doc"]["state"]["done"]) == {"c"})
 
+# anyone can create their own account, and accounts never see each other's data
+s, b, _ = call("/signup", {"username": "Frodo", "password": "ring-bearer"})
+frodo = b.get("token")
+check("sign-up creates an account and signs in", s == 200 and bool(frodo))
+s, b, _ = call("/sync", {"doc": doc(done={"f": {"at": 1, "xp": 10}}, epoch=0)}, frodo)
+check("a new account starts empty", set(b["doc"]["state"]["done"]) == {"f"} and b["doc"]["epoch"] == 0)
+s, b, _ = call("/sync", {"doc": doc(epoch=1)}, phone)
+check("accounts are isolated from each other", set(b["doc"]["state"]["done"]) == {"c"})
+s, b, _ = call("/login", {"username": "FRODO", "password": "ring-bearer"})
+check("usernames are not case sensitive", s == 200)
+s, b, _ = call("/signup", {"username": "frodo", "password": "another-pass"})
+check("a taken username is refused", s == 409)
+s, b, _ = call("/signup", {"username": "gautam", "password": "steal-the-name"})
+check("sign-up cannot take over an existing account", s == 409)
+s, b, _ = call("/signup", {"username": "ab", "password": "long-enough-pass"})
+check("a bad username is refused", s == 400)
+s, b, _ = call("/signup", {"username": "samwise", "password": "short"})
+check("a short password is refused", s == 400)
+server.MAX_USERS = 2
+s, b, _ = call("/signup", {"username": "samwise", "password": "long-enough-pass"})
+check("the account cap is enforced", s == 403)
+server.MAX_USERS = 500
+for n in range(server.MAX_SIGNUPS - 1):
+    call("/signup", {"username": "hobbit%d" % n, "password": "long-enough-pass"})
+s, b, _ = call("/signup", {"username": "onemore", "password": "long-enough-pass"})
+check("sign-ups are rate limited per address", s == 429)
+server.SIGNUP = False
+server._signups.clear()
+s, b, _ = call("/signup", {"username": "pippin", "password": "long-enough-pass"})
+check("sign-up can be switched off", s == 403)
+server.SIGNUP = True
+big = {"k%d" % n: {"v": "x" * 49000, "t": 5} for n in range(40)}
+call("/sync", {"doc": doc(code=big)}, frodo)
+s, b, _ = call("/sync", {"doc": doc(code={"z%d" % n: {"v": "y" * 49000, "t": 5} for n in range(40)})}, frodo)
+check("an account cannot store unlimited data", s == 413)
+check("deleting a user removes them", server.delete_user("frodo") and call("/sync", {"doc": doc()}, frodo)[0] == 401)
+
 # a browser sends many requests down one connection; none may disturb the next
 conn = http.client.HTTPConnection("127.0.0.1", httpd.server_address[1])
 codes = []

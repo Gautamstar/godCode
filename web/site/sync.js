@@ -1,4 +1,4 @@
-// Optional progress sync with a self-hosted server (see web/sync/README.md).
+// Optional accounts: progress sync with the server in web/sync.
 // Signed out, nothing here runs and the site stays purely local. Signed in,
 // the whole progress document is sent after each change and the merged result
 // comes back, so devices add to each other and never overwrite.
@@ -172,21 +172,23 @@ const Sync = (() => {
     if (p.protocol !== "https:" && !local) throw new Error("The server address has to start with https://");
     return u;
   }
-  async function login(url, user, password) {
+  // create: true makes a new account, otherwise signs in to an existing one
+  async function login(url, user, password, create) {
     let clean;
     try {
       clean = cleanUrl(url);
     } catch (e) {
       return e.message || "That address is not valid.";
     }
+    user = user.trim().toLowerCase();
     setCfg({ url: clean, user });
     let r;
     try {
-      r = await post("/login", { username: user, password });
+      r = await post(create ? "/signup" : "/login", { username: user, password });
     } catch (e) {
-      return "Could not reach " + clean + ". Check the address and that the server is running.";
+      return "Could not reach the server. Check your connection and try again.";
     }
-    if (!r.ok) return r.data.error || "Sign in failed.";
+    if (!r.ok) return r.data.error || (create ? "Could not create the account." : "Sign in failed.");
     // Taking the server's epoch means progress already in this browser is
     // merged in on the first sync instead of being discarded.
     setCfg({ token: r.data.token, epoch: r.data.epoch || 0 });

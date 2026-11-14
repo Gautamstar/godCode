@@ -4,8 +4,12 @@
 Stores each user's progress (completed items, streak days, saved code) in a
 SQLite file so the site shows the same progress on every device.
 
-    python3 server.py adduser NAME     create a user or change their password
     python3 server.py serve            run the service
+    python3 server.py adduser NAME     create a user or reset their password
+    python3 server.py users            list users
+    python3 server.py deluser NAME     delete a user and their progress
+
+People can also create their own account from the site (POST /signup).
 
 Settings, all optional environment variables:
 
@@ -14,6 +18,8 @@ Settings, all optional environment variables:
     SYNC_PORT     port to listen on              (default 8787)
     SYNC_ORIGINS  comma separated site origins allowed to call the service
                   (default https://gautamstar.github.io)
+    SYNC_SIGNUP   "off" stops new accounts being created from the site
+    SYNC_MAX_USERS  most accounts the service will hold (default 500)
 
 It listens on localhost by default and speaks plain HTTP. Put it behind a
 reverse proxy that terminates HTTPS (see README.md); browsers will not let an
@@ -36,6 +42,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -49,14 +56,22 @@ PORT = int(os.environ.get("SYNC_PORT", "8787"))
 ORIGINS = [o.strip().rstrip("/") for o in
            os.environ.get("SYNC_ORIGINS", "https://gautamstar.github.io").split(",") if o.strip()]
 
-MAX_BODY = 4 * 1024 * 1024      # a full document is a few hundred KB at most
-MAX_ITEMS = 5000
-MAX_CODE = 100000               # characters of code per item
+SIGNUP = os.environ.get("SYNC_SIGNUP", "on").lower() != "off"
+MAX_USERS = int(os.environ.get("SYNC_MAX_USERS", "500"))
+
+MAX_BODY = 2 * 1024 * 1024      # a full document is a few hundred KB at most
+MAX_DOC = 3 * 1024 * 1024       # most the service stores for one user
+MAX_ITEMS = 2000
+MAX_CODE = 50000                # characters of code per item
 MAX_FAILS = 5                   # failed logins per address before a lockout
 LOCKOUT = 300                   # seconds
+MAX_SIGNUPS = 5                 # new accounts per address per hour
+MIN_PASSWORD = 8
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{2,31}$")
 
 _db_lock = threading.Lock()
 _fails = {}                     # address -> (count, first_failure_time)
+_signups = {}                   # address -> (count, first_signup_time)
 
 
 def db():
@@ -82,6 +97,26 @@ def set_password(name, password):
             (name, salt, hash_password(password, salt), time.time()))
         # changing the password signs every device out
         con.execute("DELETE FROM sessions WHERE name = ?", (name,))
+
+
+def create_user(name, password):
+    """Create a new account. Returns "ok", "taken" or "full"."""
+    salt = secrets.token_bytes(16)
+    digest = hash_password(password, salt)
+    with _db_lock, db() as con:
+        if con.execute("SELECT 1 FROM users WHERE name = ?", (name,)).fetchone():
+            return "taken"
+        if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] >= MAX_USERS:
+            return "full"
+        con.execute("INSERT INTO users (name, salt, hash, doc, updated) VALUES (?, ?, ?, NULL, ?)",
+                    (name, salt, digest, time.time()))
+    return "ok"
+
+
+def delete_user(name):
+    with _db_lock, db() as con:
+        con.execute("DELETE FROM sessions WHERE name = ?", (name,))
+        return con.execute("DELETE FROM users WHERE name = ?", (name,)).rowcount > 0
 
 
 def check_password(name, password):
@@ -194,6 +229,8 @@ def save_doc(con, name, doc):
 def sync(name, incoming):
     with _db_lock, db() as con:
         merged = merge(load_doc(con, name), clean(incoming))
+        if len(json.dumps(merged, separators=(",", ":"))) > MAX_DOC:
+            return None                    # over the per-user allowance: store nothing
         save_doc(con, name, merged)
     return merged
 
@@ -276,13 +313,18 @@ class Handler(BaseHTTPRequestHandler):
         data = self.body()
         if self.path == "/login":
             return self.login(data or {})
+        if self.path == "/signup":
+            return self.signup(data or {})
         name, token = self.user()
         if name is None:
             return self.reply(401, {"error": "Sign in again."})
         if self.path == "/sync":
             if data is None:
                 return self.reply(400, {"error": "Bad request."})
-            return self.reply(200, {"doc": sync(name, data.get("doc"))})
+            doc = sync(name, data.get("doc"))
+            if doc is None:
+                return self.reply(413, {"error": "This account is holding too much data."})
+            return self.reply(200, {"doc": doc})
         if self.path == "/reset":
             return self.reply(200, {"doc": reset(name)})
         if self.path == "/logout":
@@ -296,26 +338,66 @@ class Handler(BaseHTTPRequestHandler):
         if count >= MAX_FAILS and time.time() - since < LOCKOUT:
             return self.reply(429, {"error": "Too many attempts. Wait five minutes."})
         name, password = data.get("username"), data.get("password")
+        if isinstance(name, str):
+            name = name.strip().lower()
         if (isinstance(name, str) and isinstance(password, str) and len(password) <= 500
                 and check_password(name, password)):
             _fails.pop(who, None)
             return self.reply(200, {"token": new_session(name), "epoch": current_epoch(name)})
         if time.time() - since >= LOCKOUT:
             count, since = 0, time.time()
+        if len(_fails) > 20000:
+            _fails.clear()
         _fails[who] = (count + 1, since or time.time())
         self.reply(401, {"error": "Wrong username or password."})
+
+    def signup(self, data):
+        if not SIGNUP:
+            return self.reply(403, {"error": "New accounts are closed on this server."})
+        who = self.client()
+        count, since = _signups.get(who, (0, 0))
+        if time.time() - since >= 3600:
+            count, since = 0, time.time()
+        if count >= MAX_SIGNUPS:
+            return self.reply(429, {"error": "Too many new accounts from this network. Try again in an hour."})
+        name, password = data.get("username"), data.get("password")
+        name = name.strip().lower() if isinstance(name, str) else ""
+        if not NAME_RE.match(name):
+            return self.reply(400, {"error": "Usernames are 3 to 32 characters: letters, digits, - and _."})
+        if not isinstance(password, str) or not MIN_PASSWORD <= len(password) <= 500:
+            return self.reply(400, {"error": "Use a password of at least %d characters." % MIN_PASSWORD})
+        result = create_user(name, password)
+        if result == "taken":
+            return self.reply(409, {"error": "That username is taken."})
+        if result == "full":
+            return self.reply(403, {"error": "This server is not taking new accounts right now."})
+        if len(_signups) > 20000:
+            _signups.clear()
+        _signups[who] = (count + 1, since)
+        self.reply(200, {"token": new_session(name), "epoch": 0})
 
 
 def main():
     args = sys.argv[1:]
     if len(args) == 2 and args[0] == "adduser":
-        first = getpass.getpass("Password for %s: " % args[1])
-        if len(first) < 10:
-            raise SystemExit("Use at least 10 characters.")
+        name = args[1].strip().lower()
+        if not NAME_RE.match(name):
+            raise SystemExit("Usernames are 3 to 32 characters: letters, digits, - and _.")
+        first = getpass.getpass("Password for %s: " % name)
+        if len(first) < MIN_PASSWORD:
+            raise SystemExit("Use at least %d characters." % MIN_PASSWORD)
         if first != getpass.getpass("Again: "):
             raise SystemExit("The two entries did not match.")
-        set_password(args[1], first)
-        print("Saved. Any device signed in as %s has been signed out." % args[1])
+        set_password(name, first)
+        print("Saved. Any device signed in as %s has been signed out." % name)
+    elif args == ["users"]:
+        with db() as con:
+            for name, doc, updated in con.execute("SELECT name, doc, updated FROM users ORDER BY name"):
+                done = len(json.loads(doc)["state"]["done"]) if doc else 0
+                print("%-32s %4d done   last change %s"
+                      % (name, done, time.strftime("%Y-%m-%d", time.localtime(updated))))
+    elif len(args) == 2 and args[0] == "deluser":
+        print("Deleted." if delete_user(args[1].strip().lower()) else "No such user.")
     elif args == ["serve"]:
         db().close()
         print("godcode-sync on http://%s:%d  db=%s  origins=%s"

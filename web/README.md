@@ -29,9 +29,8 @@ added. The build:
 
 - reads every `NN_topic/` folder that has a `drills.py`, without modifying any of them
 - runs every reference solution through the grader and fails if one does not pass
-- flags drills and problems already solved in the repo files, so the site imports them
-  as completed
-- carries a half-written attempt across as the starting code in the editor
+- counts drills and problems already attempted in the repo files, but never publishes
+  them: the site is public, so every visitor starts from zero with a blank editor
 
 ## How it fits together
 
@@ -57,9 +56,9 @@ web/
   and awards XP.
 - **Progress** (XP, streak, completed items, your code) lives in the browser's
   localStorage. Use Export on the dashboard to back it up or move it to another browser.
-- **Sync across devices** is optional. `web/sync/` is a small self-hosted service; sign in
-  to it from the dashboard and every browser shares one copy of the progress. See
-  `web/sync/README.md`.
+- **Accounts** are optional. Anyone can create one from the dashboard; it is stored by
+  the small self-hosted service in `web/sync/`, and every browser signed in to it shares
+  one copy of the progress. See `web/sync/README.md`.
 - **Solutions** are behind a confirm. Opening one before solving halves the XP for that
   item.
 - The editor, Markdown renderer, and Pyodide load from public CDNs, so the first visit

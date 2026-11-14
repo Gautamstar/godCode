@@ -1,8 +1,9 @@
 # godCode sync
 
 The site on GitHub Pages keeps progress in the browser. This small service, run on your
-own server, lets every browser you sign in from share one copy: completed items, XP,
-streak days, and the code you wrote.
+own server, adds accounts: every browser signed in to the same account shares one copy
+of the completed items, XP, streak days, and code. Visitors create their own accounts
+from the site, and each account sees only its own data.
 
 - `server.py` is the whole service: Python standard library and one SQLite file.
 - `test_server.py` checks it end to end: `python3 web/sync/test_server.py`
@@ -10,9 +11,25 @@ streak days, and the code you wrote.
 
 ## What it needs
 
-1. **HTTPS.** The site is served over HTTPS, and browsers refuse to let it call a plain
+**HTTPS.** The site is served over HTTPS, and browsers refuse to let it call a plain
    HTTP address. Something in front of the service has to provide a certificate.
-2. **A user.** There is no sign-up page. You create users on the server.
+
+## Accounts
+
+Anyone can create an account from the site's dashboard (username and a password of 8 or
+more characters). Passwords are stored only as salted scrypt hashes. There is no email
+and so no self-service password reset. Limits that keep a public service safe on a small
+box: 5 new accounts per address per hour, 500 accounts in total (`SYNC_MAX_USERS`), about
+3 MB of data per account, and a lockout after 5 wrong passwords. Set `SYNC_SIGNUP=off` to
+stop new sign-ups.
+
+Admin commands, run on the server:
+
+```bash
+sudo docker compose exec sync python server.py users
+sudo docker compose exec sync python server.py adduser NAME    # create, or reset a password
+sudo docker compose exec sync python server.py deluser NAME
+```
 
 ## Setup with Docker and a Cloudflare Tunnel
 
@@ -30,8 +47,8 @@ sudo docker compose up -d --build
 sudo docker compose exec sync python server.py adduser YOURNAME
 ```
 
-`adduser` asks for a password (10 characters or more) and stores only a salted scrypt
-hash. Run it again to change the password, which also signs every device out.
+`adduser` is optional, since people can sign up from the site. Running it for an
+existing name resets that password and signs every device out.
 
 Then, in the Cloudflare Zero Trust dashboard, open the tunnel, add a **public hostname**
 (for example `godcode-sync.yourdomain.com`), and point it at `http://godcode-sync:8787`.
@@ -56,9 +73,10 @@ Run the service with `python3 server.py serve` under systemd (it listens on
 
 ## Using it
 
-On the site's dashboard choose **Sync across devices**, enter the server address, your
-username, and your password. The password goes to your server only. The browser keeps a
-random session token, never the password. Do the same in every browser you use.
+On the site's dashboard choose **Create account** once, then **Sign in** in every other
+browser you use. The browser keeps a random session token, never the password. The server
+address is prefilled (`DEFAULT_URL` in `web/site/sync.js`) and can be changed under
+"Server" in the dialog.
 
 ## How devices are reconciled
 

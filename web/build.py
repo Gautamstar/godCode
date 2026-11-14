@@ -320,6 +320,11 @@ def main():
         wip = sum("draft" in i for i in items)
         print("  %-22s %3d drills  %2d problems  %2d already solved  %d in progress"
               % (folder, d, p, done, wip))
+        # The site is public: every visitor starts from zero with a blank
+        # editor. Attempts in the repo are counted above but never published.
+        for i in items:
+            i.pop("existing", None)
+            i.pop("draft", None)
 
     if failures:
         print("\nReference solutions that do NOT pass:")

@@ -276,7 +276,6 @@
       if (!(await Sync.reset())) return toast("Could not reach the sync server, so nothing was erased");
       ownKeys().forEach((k) => localStorage.removeItem(k));
       load();
-      importRepoWork(true);
       renderDash();
     };
   }
@@ -296,15 +295,15 @@
     const s = Sync.info();
     if (!s.signedIn) {
       box.className = "syncbox" + (s.status.kind === "error" ? " err" : "");
-      box.innerHTML = ico("rune-stone") + "<span>" + esc(s.status.kind === "error" ? s.status.msg : "Progress is saved in this browser only.") + "</span>" +
-        '<button class="btn" id="sync-open">Sync across devices</button>';
-      $("#sync-open").onclick = openSync;
+      box.innerHTML = ico("rune-stone") + "<span>" + esc(s.status.kind === "error" ? s.status.msg : "Progress is saved in this browser only. An account keeps it on every device.") + "</span>" +
+        '<button class="btn ghost" id="sync-open">Sign in</button><button class="btn" id="sync-new">Create account</button>';
+      $("#sync-open").onclick = () => openSync(false);
+      $("#sync-new").onclick = () => openSync(true);
       return;
     }
-    const host = s.url.replace(/^https?:\/\//, "");
     const line = s.status.kind === "error" ? s.status.msg
-      : s.status.kind === "syncing" ? "Syncing with " + host + "…"
-      : "Synced with " + host + " as " + s.user + (s.last ? ", " + ago(s.last) : "");
+      : s.status.kind === "syncing" ? "Saving your progress…"
+      : "Signed in as " + s.user + (s.last ? ". Progress saved " + ago(s.last) + "." : ".");
     box.className = "syncbox on" + (s.status.kind === "error" ? " err" : "");
     box.innerHTML = ico("rune-stone") + "<span>" + esc(line) + "</span>" +
       '<button class="btn ghost" id="sync-now">Sync now</button><button class="btn ghost" id="sync-out">Sign out</button>';
@@ -315,9 +314,22 @@
       toast("Signed out. Progress stays in this browser.");
     };
   }
-  function openSync() {
+  let creating = false;
+  function setMode(create) {
+    creating = create;
+    $("#mode-in").setAttribute("aria-selected", String(!create));
+    $("#mode-new").setAttribute("aria-selected", String(create));
+    $("#sync-blurb").textContent = create
+      ? "Pick a username and a password. Progress already in this browser moves into the new account. There is no password reset, so keep the password somewhere safe."
+      : "Sign in and this browser picks up your progress from your other devices.";
+    $("#sync-dialog [name=password]").autocomplete = create ? "new-password" : "current-password";
+    $("#sync-go").textContent = create ? "Create account" : "Sign in";
+    $("#sync-error").textContent = "";
+  }
+  function openSync(create) {
     const dlg = $("#sync-dialog");
     const s = Sync.info();
+    setMode(create);
     dlg.querySelector("[name=url]").value = s.url;
     dlg.querySelector("[name=user]").value = s.user;
     dlg.querySelector("[name=password]").value = "";
@@ -327,26 +339,27 @@
   function wireSync() {
     const dlg = $("#sync-dialog");
     $("#sync-cancel").onclick = () => dlg.close();
+    $("#mode-in").onclick = () => setMode(false);
+    $("#mode-new").onclick = () => setMode(true);
     $("#sync-form").onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target;
       const go = $("#sync-go");
       go.disabled = true;
-      go.textContent = "Signing in…";
-      const err = await Sync.login(f.url.value, f.user.value.trim(), f.password.value);
+      go.textContent = creating ? "Creating…" : "Signing in…";
+      const err = await Sync.login(f.url.value, f.user.value, f.password.value, creating);
       go.disabled = false;
-      go.textContent = "Sign in";
+      go.textContent = creating ? "Create account" : "Sign in";
       f.password.value = "";
       if (err) return ($("#sync-error").textContent = err);
       dlg.close();
-      toast("Sync is on. This browser's progress has been merged.");
+      toast(creating ? "Account created. Your progress is saved to it." : "Signed in. Your progress is up to date.");
     };
     Sync.onStatus(renderSyncBox);
     // Another device changed something: reload state and refresh what is on
     // screen without throwing away the page the user is on.
     Sync.onApplied(({ replaced, codeChanged }) => {
       load();
-      if (replaced) importRepoWork(true);
       const item = currentItem();
       if (!item) return renderDash();
       renderTop(item);
@@ -356,7 +369,7 @@
       const tag = $("#done-tag");
       if (tag) tag.hidden = !isDone(item.id);
       if (editor && (replaced || codeChanged.includes(item.id))) {
-        const code = savedCode(item.id) ?? item.existing ?? item.draft ?? item.starter;
+        const code = savedCode(item.id) ?? item.starter;
         if (code !== editor.getValue()) {
           remoteEdit = true;
           editor.setValue(code);
@@ -483,7 +496,7 @@
     const split = localStorage.getItem("godcode:split");
     if (split) $("#ws").style.setProperty("--split", split);
 
-    const initial = savedCode(item.id) ?? item.existing ?? item.draft ?? item.starter;
+    const initial = savedCode(item.id) ?? item.starter;
     editor = CodeMirror($("#editor"), {
       value: initial,
       mode: "python",
@@ -634,19 +647,6 @@
     else renderExercise(item);
   }
 
-  // Work already done in the repo files counts: build.py flags it as "existing".
-  function importRepoWork(quiet) {
-    let n = 0;
-    flat.forEach((i) => {
-      if (i.existing && !isDone(i.id)) {
-        if (savedCode(i.id) === null) saveCode(i.id, i.existing);
-        complete(i, { imported: true });
-        n++;
-      }
-    });
-    if (n && !quiet) toast("Imported " + n + " exercises you already solved in the repo");
-  }
-
   async function init() {
     load();
     const data = await (await fetch("content.json", { cache: "no-cache" })).json();
@@ -658,8 +658,6 @@
         moduleOf[i.id] = m;
       })
     );
-    importRepoWork(false);
-
     Runner.onStatus((s) => {
       const el = $("#py");
       el.className = "py " + s;
