@@ -8,7 +8,7 @@ const Sync = (() => {
   const CODE = "godcode:code:";
   const STAMPS = "godcode:stamps"; // itemId -> time the code was last edited
   // Prefilled in the sign-in form. The password is never stored anywhere.
-  const DEFAULT_URL = "";
+  const DEFAULT_URL = "https://godcode-sync.fitfilesize.com";
 
   const read = (k, fallback) => {
     try {
