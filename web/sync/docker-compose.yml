@@ -1,0 +1,43 @@
+# godCode sync on a VPS, reached through a Cloudflare Tunnel that is already
+# running on the box. No port is published: the container joins the tunnel's
+# Docker network, and the tunnel forwards one hostname to http://godcode-sync:8787.
+#
+#   docker compose up -d --build
+#   docker compose exec sync python server.py adduser YOURNAME
+#
+# The project name is fixed so another compose project's --remove-orphans
+# never mistakes this container for one of its own.
+name: godcode-sync
+
+services:
+  sync:
+    build: .
+    image: godcode-sync
+    container_name: godcode-sync
+    restart: unless-stopped
+    environment:
+      SYNC_ORIGINS: ${SYNC_ORIGINS:-https://gautamstar.github.io}
+    volumes:
+      - data:/data
+    networks:
+      - tunnel
+    mem_limit: 96m
+    pids_limit: 64
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+
+volumes:
+  data:
+
+networks:
+  tunnel:
+    external: true
+    name: ${TUNNEL_NETWORK:-deploy_default}

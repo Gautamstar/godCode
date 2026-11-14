@@ -133,6 +133,9 @@ in the browser via Pyodide, XP and streaks in localStorage). See `web/README.md`
 After changing any lesson, drill, problem, or solution, or adding a module, regenerate the
 content with `python3 web/build.py`. It fails if any reference solution stops passing.
 Preview with the `godcode-web` entry in `.claude/launch.json`.
+`web/sync/` is an optional progress sync service (stdlib Python and SQLite) that runs on
+his VPS as its own Docker container; the site itself stays on GitHub Pages. Test it with
+`python3 web/sync/test_server.py`. See `web/sync/README.md`.
 
 ## Progress log
 - 2026-07-23: workspace created. Modules 00, 01, 02 built.
@@ -149,3 +152,4 @@ Preview with the `godcode-web` entry in `.claude/launch.json`.
   drills total, all reference solutions verified passing. Shared `drill_harness.py`
   replaces the runner that used to be inlined at the bottom of each file.
 - 2026-11-10: added `web/`, the browser version of modules 00-06 (286 items).
+- 2026-11-14: added `web/sync/`, cross-device progress sync, and the sign-in on the site.

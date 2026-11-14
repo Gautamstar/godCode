@@ -46,7 +46,9 @@ web/
     pyworker.js      web worker that loads Pyodide
     grader.py        the grader, shared by the browser and build.py
     content.json     generated
+    sync.js          optional progress sync with a self-hosted server
     art/             engravings and icons, with CREDITS.md
+  sync/              the sync service (server.py, Dockerfile, setup guide)
 ```
 
 - **Python** runs in the browser through Pyodide, in a web worker. A run that takes longer
@@ -55,6 +57,9 @@ web/
   and awards XP.
 - **Progress** (XP, streak, completed items, your code) lives in the browser's
   localStorage. Use Export on the dashboard to back it up or move it to another browser.
+- **Sync across devices** is optional. `web/sync/` is a small self-hosted service; sign in
+  to it from the dashboard and every browser shares one copy of the progress. See
+  `web/sync/README.md`.
 - **Solutions** are behind a confirm. Opening one before solving halves the XP for that
   item.
 - The editor, Markdown renderer, and Pyodide load from public CDNs, so the first visit

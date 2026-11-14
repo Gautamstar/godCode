@@ -29,6 +29,7 @@
   const moduleOf = {};
   let editor = null;
   let busy = false;
+  let remoteEdit = false; // true while the editor is being filled from another device
 
   // ---------------------------------------------------------------- state
   const blank = () => ({ done: {}, peeked: {}, xp: 0, days: [] });
@@ -44,6 +45,7 @@
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
     } catch (e) {}
+    Sync.touch();
   }
   function savedCode(id) {
     try {
@@ -56,6 +58,8 @@
     try {
       localStorage.setItem(codeKey(id), code);
     } catch (e) {}
+    Sync.stampCode(id);
+    Sync.touch();
   }
   const today = () => {
     const d = new Date();
@@ -253,7 +257,8 @@
       chip("dragon-head", cnt(probs) + " / " + probs.length, "Bosses slain") +
       "</div>" +
       '<h2 class="sec">The road ahead</h2><ol class="quests">' + mods + "</ol>" +
-      '<div class="foot"><span>Progress is saved in this browser.</span>' +
+      '<div class="syncbox" id="syncbox"></div>' +
+      '<div class="foot">' +
       '<button class="btn ghost" id="export">Export</button>' +
       '<button class="btn ghost" id="import">Import</button>' +
       '<button class="btn ghost" id="reset">Reset</button>' +
@@ -264,18 +269,108 @@
     $("#export").onclick = exportProgress;
     $("#import").onclick = () => $("#import-file").click();
     $("#import-file").onchange = importProgress;
-    $("#reset").onclick = () => {
-      if (!confirm("Erase all progress, XP, and saved code in this browser? This cannot be undone.")) return;
-      Object.keys(localStorage).filter((k) => k.startsWith("godcode:")).forEach((k) => localStorage.removeItem(k));
+    renderSyncBox();
+    $("#reset").onclick = async () => {
+      const everywhere = Sync.info().signedIn;
+      if (!confirm("Erase all progress, XP, and saved code " + (everywhere ? "on every synced device" : "in this browser") + "? This cannot be undone.")) return;
+      if (!(await Sync.reset())) return toast("Could not reach the sync server, so nothing was erased");
+      ownKeys().forEach((k) => localStorage.removeItem(k));
       load();
       importRepoWork(true);
       renderDash();
     };
   }
 
+  // Everything this site stores except the sync sign-in, which must never
+  // leave the browser in an export or be wiped by a reset.
+  const ownKeys = () => Object.keys(localStorage).filter((k) => k.startsWith("godcode:") && k !== Sync.CFG);
+
+  // ---------------------------------------------------------------- sync
+  function ago(t) {
+    const m = Math.floor((Date.now() - t) / 60000);
+    return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.floor(m / 60) + " h ago" : Math.floor(m / 1440) + " d ago";
+  }
+  function renderSyncBox() {
+    const box = $("#syncbox");
+    if (!box) return;
+    const s = Sync.info();
+    if (!s.signedIn) {
+      box.className = "syncbox" + (s.status.kind === "error" ? " err" : "");
+      box.innerHTML = ico("rune-stone") + "<span>" + esc(s.status.kind === "error" ? s.status.msg : "Progress is saved in this browser only.") + "</span>" +
+        '<button class="btn" id="sync-open">Sync across devices</button>';
+      $("#sync-open").onclick = openSync;
+      return;
+    }
+    const host = s.url.replace(/^https?:\/\//, "");
+    const line = s.status.kind === "error" ? s.status.msg
+      : s.status.kind === "syncing" ? "Syncing with " + host + "…"
+      : "Synced with " + host + " as " + s.user + (s.last ? ", " + ago(s.last) : "");
+    box.className = "syncbox on" + (s.status.kind === "error" ? " err" : "");
+    box.innerHTML = ico("rune-stone") + "<span>" + esc(line) + "</span>" +
+      '<button class="btn ghost" id="sync-now">Sync now</button><button class="btn ghost" id="sync-out">Sign out</button>';
+    $("#sync-now").onclick = () => Sync.syncNow();
+    $("#sync-out").onclick = async () => {
+      await Sync.logout();
+      renderSyncBox();
+      toast("Signed out. Progress stays in this browser.");
+    };
+  }
+  function openSync() {
+    const dlg = $("#sync-dialog");
+    const s = Sync.info();
+    dlg.querySelector("[name=url]").value = s.url;
+    dlg.querySelector("[name=user]").value = s.user;
+    dlg.querySelector("[name=password]").value = "";
+    $("#sync-error").textContent = "";
+    dlg.showModal();
+  }
+  function wireSync() {
+    const dlg = $("#sync-dialog");
+    $("#sync-cancel").onclick = () => dlg.close();
+    $("#sync-form").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      const go = $("#sync-go");
+      go.disabled = true;
+      go.textContent = "Signing in…";
+      const err = await Sync.login(f.url.value, f.user.value.trim(), f.password.value);
+      go.disabled = false;
+      go.textContent = "Sign in";
+      f.password.value = "";
+      if (err) return ($("#sync-error").textContent = err);
+      dlg.close();
+      toast("Sync is on. This browser's progress has been merged.");
+    };
+    Sync.onStatus(renderSyncBox);
+    // Another device changed something: reload state and refresh what is on
+    // screen without throwing away the page the user is on.
+    Sync.onApplied(({ replaced, codeChanged }) => {
+      load();
+      if (replaced) importRepoWork(true);
+      const item = currentItem();
+      if (!item) return renderDash();
+      renderTop(item);
+      const strip = $("#strip");
+      if (strip) strip.innerHTML = cells(moduleOf[item.id], item, true);
+      if (item.kind === "lesson") return;
+      const tag = $("#done-tag");
+      if (tag) tag.hidden = !isDone(item.id);
+      if (editor && (replaced || codeChanged.includes(item.id))) {
+        const code = savedCode(item.id) ?? item.existing ?? item.draft ?? item.starter;
+        if (code !== editor.getValue()) {
+          remoteEdit = true;
+          editor.setValue(code);
+          remoteEdit = false;
+          toast("Loaded your newer code from another device");
+        }
+      }
+    });
+    if (Sync.info().signedIn) Sync.syncNow();
+  }
+
   function exportProgress() {
     const dump = {};
-    Object.keys(localStorage).filter((k) => k.startsWith("godcode:")).forEach((k) => (dump[k] = localStorage.getItem(k)));
+    ownKeys().forEach((k) => (dump[k] = localStorage.getItem(k)));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(dump, null, 1)], { type: "application/json" }));
     a.download = "godcode-progress-" + today() + ".json";
@@ -287,8 +382,9 @@
     if (!file) return;
     try {
       const dump = JSON.parse(await file.text());
-      Object.keys(dump).filter((k) => k.startsWith("godcode:")).forEach((k) => localStorage.setItem(k, dump[k]));
+      Object.keys(dump).filter((k) => k.startsWith("godcode:") && k !== Sync.CFG).forEach((k) => localStorage.setItem(k, dump[k]));
       load();
+      Sync.touch();
       renderDash();
       toast("Progress imported");
     } catch (err) {
@@ -407,7 +503,7 @@
         "Shift-Ctrl-Enter": () => run(item, true),
       },
     });
-    editor.on("change", () => saveCode(item.id, editor.getValue()));
+    editor.on("change", () => remoteEdit || saveCode(item.id, editor.getValue()));
     setTimeout(() => editor && editor.refresh(), 0);
 
     $("#run").onclick = () => run(item, false);
@@ -583,6 +679,7 @@
     });
     window.addEventListener("hashchange", route);
     route();
+    wireSync();
   }
 
   init().catch((err) => {

@@ -206,7 +206,35 @@ h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .strip .c.cur { height: 18px; box-shadow: none; }
 .strip a.c:hover { background: var(--gold-hi); height: 14px; }
 
-.foot { margin-top: 36px; display: flex; gap: 4px 6px; flex-wrap: wrap; align-items: center; color: var(--dim); font-size: 15px; }
+/* sync: a status row above the footer, and the sign-in dialog */
+.syncbox {
+  margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 16px;
+}
+.syncbox > span { flex: 1; min-width: 12rem; }
+.syncbox .ico { color: var(--dim); font-size: 20px; }
+.syncbox.on .ico { color: var(--good); }
+.syncbox.err { border-color: var(--bad); }
+.syncbox.err > span, .syncbox.err .ico { color: var(--bad); }
+.modal {
+  width: min(27rem, calc(100vw - 32px)); padding: 0; border: 1px solid var(--gold-lo); border-radius: 10px;
+  background: var(--panel); color: var(--parch); box-shadow: 0 30px 90px #000;
+}
+.modal::backdrop { background: rgba(4, 5, 8, .78); }
+.modal form { padding: 26px 26px 22px; display: flex; flex-direction: column; gap: 14px; }
+.modal h2 { margin: 0; font: 600 20px var(--display); letter-spacing: .5px; color: var(--gold-hi); }
+.modal p { margin: 0; color: var(--muted); font-size: 16px; }
+.modal label { display: flex; flex-direction: column; gap: 5px; font: 600 11px var(--display); letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+.modal input {
+  background: var(--forge); color: var(--parch); border: 1px solid var(--line-2); border-radius: 6px; padding: 10px 12px;
+  font: 15px var(--mono); letter-spacing: 0; text-transform: none; min-width: 0;
+}
+.modal input:focus { outline: none; border-color: var(--gold); }
+.modal .err { color: var(--bad); min-height: 1.5em; }
+.modal .err:empty { display: none; }
+.modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+.foot { margin-top: 14px; display: flex; gap: 4px 6px; flex-wrap: wrap; align-items: center; color: var(--dim); font-size: 15px; }
 .foot span { margin-right: 8px; }
 .credits { margin: 10px 0 0; color: var(--dim); font-size: 14px; font-style: italic; }
 
