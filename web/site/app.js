@@ -495,7 +495,9 @@
       '<section class="left">' + leftPane(item) + "</section>" +
       '<div class="divider" id="divider"></div>' +
       '<section class="right">' +
-      '<div class="pane-head"><span>solution.py</span><div class="grow"></div><button class="link" id="reset-code">Reset to starter</button></div>' +
+      '<div class="pane-head"><span>solution.py</span><span class="pos" id="pos">Ln 1, Col 1</span><div class="grow"></div>' +
+      '<details class="keys" id="keys"><summary>Shortcuts</summary><dl>' + shortcutList(mac) + "</dl></details>" +
+      '<button class="link" id="reset-code">Reset to starter</button></div>' +
       '<div class="editor" id="editor"></div>' +
       '<div class="pane-head"><span>results</span></div>' +
       '<div class="console" id="console"><div class="idle">Write your answer above, then Run or Submit.</div></div>' +
@@ -512,23 +514,41 @@
     const initial = savedCode(item.id) ?? item.starter;
     editor = CodeMirror($("#editor"), {
       value: initial,
-      mode: "python",
+      mode: { name: "python", version: 3 },
+      keyMap: "sublime", // multi-cursor, move and duplicate lines, smart backspace
       lineNumbers: true,
       indentUnit: 4,
       tabSize: 4,
+      indentWithTabs: false,
+      smartIndent: true,
       matchBrackets: true,
       autoCloseBrackets: true,
+      styleActiveLine: true,
+      highlightSelectionMatches: { showToken: /\w/, minChars: 2 },
+      foldGutter: true,
+      gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       extraKeys: {
-        Tab: (cm) => (cm.somethingSelected() ? cm.indentSelection("add") : cm.replaceSelection("    ", "end")),
+        // Tab indents a selection, otherwise steps to the next 4-space stop
+        Tab: (cm) => (cm.somethingSelected() ? cm.indentSelection("add") : cm.execCommand("insertSoftTab")),
         "Shift-Tab": (cm) => cm.indentSelection("subtract"),
+        Home: "goLineStartSmart",
         "Cmd-/": "toggleComment",
         "Ctrl-/": "toggleComment",
+        "Ctrl-Space": complete_,
         "Cmd-Enter": () => run(item, false),
         "Ctrl-Enter": () => run(item, false),
         "Shift-Cmd-Enter": () => run(item, true),
         "Shift-Ctrl-Enter": () => run(item, true),
       },
     });
+    editor.addOverlay(indentGuides);
+    editor.on("inputRead", dedentBlockKeyword);
+    editor.on("cursorActivity", (cm) => {
+      const c = cm.getCursor();
+      const n = cm.listSelections().length;
+      $("#pos").textContent = "Ln " + (c.line + 1) + ", Col " + (c.ch + 1) + (n > 1 ? " · " + n + " cursors" : "");
+    });
+    document.addEventListener("click", closeKeys);
     editor.on("change", () => remoteEdit || saveCode(item.id, editor.getValue()));
     setTimeout(() => editor && editor.refresh(), 0);
 
@@ -552,6 +572,90 @@
       showSolution(item);
     });
     dragDivider();
+  }
+
+  // ---- editor helpers
+  // A faint vertical rule at every 4-space level inside leading whitespace.
+  const indentGuides = {
+    token(stream) {
+      const lead = stream.string.match(/^ */)[0].length;
+      if (stream.pos < lead && stream.pos % 4 === 0 && lead - stream.pos >= 4) {
+        stream.pos += 4;
+        return "guide";
+      }
+      stream.skipToEnd();
+      return null;
+    },
+  };
+  // Python cannot know that "else:" belongs one level out until it is typed.
+  // When the colon lands on else / elif / except / finally and the line still
+  // sits at the indentation of the block body above it, pull it back a level.
+  function dedentBlockKeyword(cm, change) {
+    if (change.text.length !== 1 || change.text[0] !== ":") return;
+    const n = change.from.line;
+    const text = cm.getLine(n);
+    if (!/^\s*(else|elif\b.*|except\b.*|finally)\s*:\s*$/.test(text)) return;
+    const indent = text.match(/^ */)[0].length;
+    let p = n - 1;
+    while (p >= 0 && !cm.getLine(p).trim()) p--;
+    if (p < 0 || indent === 0) return;
+    const prev = cm.getLine(p);
+    const prevIndent = prev.match(/^ */)[0].length;
+    if (indent >= prevIndent && !/:\s*(#.*)?$/.test(prev)) cm.indentLine(n, "subtract");
+  }
+  const PY_WORDS = ("False None True and as assert break class continue def del elif else except finally for from global if import in is " +
+    "lambda nonlocal not or pass raise return try while with yield abs all any bool dict enumerate filter float int isinstance len list " +
+    "map max min print range reversed round set sorted str sum tuple zip append extend insert pop remove index count sort reverse " +
+    "copy clear keys values items get setdefault update add discard union intersection join split strip lower upper replace startswith " +
+    "endswith find isdigit isalpha isalnum ord chr divmod float('inf') collections defaultdict Counter deque heapq heappush heappop " +
+    "popleft appendleft bisect_left bisect_right").split(" ");
+  // Ctrl-Space: Python words plus every name already in the file. It only
+  // opens when asked for, so it never types the answer for you.
+  function complete_(cm) {
+    cm.showHint({
+      completeSingle: false,
+      hint(ed) {
+        const cur = ed.getCursor();
+        const line = ed.getLine(cur.line);
+        let start = cur.ch;
+        while (start > 0 && /\w/.test(line.charAt(start - 1))) start--;
+        const word = line.slice(start, cur.ch);
+        let end = cur.ch;
+        while (end < line.length && /\w/.test(line.charAt(end))) end++;
+        const seen = new Set([line.slice(start, end)]); // never offer the word being typed
+        const mine = ed.getValue().match(/[A-Za-z_]\w{2,}/g) || [];
+        const list = mine.concat(PY_WORDS).filter((w) => {
+          if (w === word || !w.toLowerCase().startsWith(word.toLowerCase()) || seen.has(w)) return false;
+          seen.add(w);
+          return true;
+        });
+        return { list: list.slice(0, 12), from: CodeMirror.Pos(cur.line, start), to: cur };
+      },
+    });
+  }
+  function shortcutList(mac) {
+    const m = mac ? "⌘" : "Ctrl+";
+    const alt = mac ? "⌥" : "Alt+";
+    const sh = mac ? "⇧" : "Shift+";
+    const rows = [
+      ["Run / Submit", m + "↵ / " + m + sh + "↵"],
+      ["Indent / outdent selection", "Tab / " + sh + "Tab"],
+      ["Comment line", m + "/"],
+      ["Move line up / down", (mac ? "⌃⌘" : "Ctrl+" + sh) + "↑↓"],
+      ["Duplicate line", m + sh + "D"],
+      ["Delete line", (mac ? "⌃" : "Ctrl+") + sh + "K"],
+      ["Select next match", m + "D"],
+      ["Add a cursor", m + "click"],
+      ["Find / replace", m + "F / " + m + alt + "F"],
+      ["Go to line", alt + "G"],
+      ["Complete a name", "Ctrl+Space"],
+      ["Fold a block", "click the gutter arrow"],
+    ];
+    return rows.map((r) => "<div><dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd></div>").join("");
+  }
+  function closeKeys(e) {
+    const k = $("#keys");
+    if (k && k.open && !k.contains(e.target)) k.open = false;
   }
 
   function dragDivider() {

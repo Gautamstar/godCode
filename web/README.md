@@ -52,6 +52,10 @@ web/
 
 - **Python** runs in the browser through Pyodide, in a web worker. A run that takes longer
   than 6 seconds is treated as an infinite loop and stopped.
+- **The editor** is CodeMirror with Python auto-indent (indent after a colon, dedent after
+  `return`, `else:` snapping back a level, Backspace removing a whole indent), indent
+  guides, folding, find and replace, multiple cursors, and name completion on Ctrl+Space.
+  The Shortcuts link above the editor lists the keys.
 - **Run** tries the first test and shows anything printed. **Submit** checks every test
   and awards XP.
 - **Progress** (XP, streak, completed items, your code) lives in the browser's

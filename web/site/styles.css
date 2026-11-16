@@ -406,6 +406,35 @@ details > div { padding: 2px 14px 6px; }
 .CodeMirror { height: 100%; font: 14px/1.65 var(--mono); background: var(--forge); color: var(--parch); }
 .editor .CodeMirror { position: absolute; inset: 0; }
 .CodeMirror-lines { padding: 12px 0; }
+/* IDE dressing: active line, indent guides, folding, search, completion */
+.CodeMirror-activeline-background { background: rgba(255, 255, 255, .035); }
+.CodeMirror-activeline .CodeMirror-linenumber { color: var(--gold); }
+.cm-guide { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .09); }
+.cm-matchhighlight { background: rgba(230, 181, 62, .16); border-radius: 2px; }
+.cm-searching { background: rgba(230, 181, 62, .38) !important; color: #fff; }
+.CodeMirror-foldgutter { width: 14px; }
+.CodeMirror-foldgutter-open, .CodeMirror-foldgutter-folded { color: #5a6077; cursor: pointer; font-size: 13px; }
+.CodeMirror-foldgutter-open:hover, .CodeMirror-foldgutter-folded { color: var(--gold); }
+.CodeMirror-foldmarker { color: var(--gold); text-shadow: none; font-family: var(--mono); padding: 0 4px; background: var(--panel-2); border-radius: 3px; }
+.CodeMirror-dialog { background: var(--panel-2); color: var(--parch); border-bottom: 1px solid var(--line-2); padding: 6px 12px; font: 14px var(--serif); }
+.CodeMirror-dialog input { font: 13px var(--mono); color: var(--parch); background: var(--forge); border: 1px solid var(--line-2); border-radius: 4px; padding: 3px 7px; width: 14em; }
+.CodeMirror-dialog button { font: 600 11px var(--display); letter-spacing: 1px; text-transform: uppercase; background: var(--panel); color: var(--parch); border: 1px solid var(--line-2); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.CodeMirror-hints { z-index: 60; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 6px; box-shadow: 0 12px 40px #000; font: 13px/1.5 var(--mono); padding: 4px; }
+.CodeMirror-hint { color: var(--parch); border-radius: 4px; padding: 2px 8px; }
+li.CodeMirror-hint-active { background: var(--gold); color: #1c1503; }
+.pane-head .pos { color: var(--dim); font: 12px var(--mono); margin-left: 12px; }
+.keys { position: relative; margin: 0 14px 0 0; background: none; border: 0; border-radius: 0; }
+.keys summary { display: inline; padding: 0; letter-spacing: 0; text-transform: none; cursor: pointer; color: var(--muted); font: 14px var(--serif); }
+.keys summary::after, .keys[open] summary::after { content: none; }
+.keys summary::-webkit-details-marker { display: none; }
+.keys summary:hover, .keys[open] summary { color: var(--parch); text-decoration: underline; }
+.keys dl {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; margin: 0; padding: 12px 14px; width: 21rem; max-width: 86vw;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; box-shadow: 0 18px 50px #000;
+}
+.keys dl div { display: flex; justify-content: space-between; gap: 16px; padding: 3px 0; }
+.keys dt { color: var(--muted); font: 15px var(--serif); }
+.keys dd { margin: 0; color: var(--parch); font: 12px var(--mono); white-space: nowrap; text-transform: none; letter-spacing: 0; }
 .CodeMirror-gutters { background: var(--forge); border-right: 0; }
 .CodeMirror-linenumber { color: #454a5c; padding: 0 12px 0 8px; }
 .CodeMirror-cursor { border-left: 2px solid var(--gold-hi); }
